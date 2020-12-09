@@ -239,6 +239,8 @@ light:
           transition_length: 4s
           update_interval: 5s
       - strobe:
+          name: Default Strobe
+      - strobe:
           name: In Alarm
           colors:
             - state: True
