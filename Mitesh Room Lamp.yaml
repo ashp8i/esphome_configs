@@ -1,0 +1,103 @@
+# ARLEC Grid Connect GLD110HA Globe with CW and WW
+# -----------------------
+# Brand: Arlec Grid Conenct
+# Model: GLD110HA
+# Runs Brightness pin and colour temperature pin. Uses TYWE3L wifi module, inbuilt gamma correction, standard ESPhome CWWW platform will not work. 
+# To use this YAML template you need to place "CWWWSinglepintempandbrightnessLightOutput.h" into the config/esphome/ directory.
+# Tasmota Template: {"NAME":"Arlec CCT","GPIO":[0,0,0,0,0,37,0,0,0,38,0,0,0],"FLAG":0,"BASE":48}
+# Take special note at Line 24 to ensure your ok with this, if not comment it out and uncomment line 59.
+
+
+
+
+
+substitutions:
+# ESPHome nodename
+  devicename: miteshroomlamp
+# A prettier name
+  upper_devicename: Mitesh Room Lamp
+  frequency_rgb: 250 Hz
+  
+esphome:
+    name: $devicename
+    platform: ESP8266
+    board: esp01_1m
+    includes:
+#    - CWWWSinglepintempandbrightnessLightOutput.h
+    - bpa800.h
+
+wifi:
+    ssid: !secret wifi_2nd_ssid
+    password: !secret wifi_2nd_password
+
+    # Enable fallback hotspot (captive portal) in case wifi connection fails
+    ap:
+      ssid:  "Mitesh Room Lamp"
+      password: !secret ap_password
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api_password
+
+ota:
+  password: !secret ota_password
+
+web_server:
+  port: 80
+
+output:
+- platform: esp8266_pwm
+  id: output_red
+  pin: GPIO4
+  max_power: 100%
+  frequency: ${frequency_rgb}
+- platform: esp8266_pwm
+  id: output_green
+  pin: GPIO12
+  max_power: 100%
+  frequency: ${frequency_rgb}
+- platform: esp8266_pwm
+  id: output_blue
+  pin: GPIO14
+  max_power: 100%
+  frequency: ${frequency_rgb}
+- platform: esp8266_pwm
+  id: output_brightness
+  max_power: 100%
+  pin: GPIO5
+- platform: esp8266_pwm
+  id: output_color_temp
+  pin: GPIO13
+  max_power: 100%
+  inverted: true
+
+#light:
+#- platform: custom
+#  lambda: |-
+#    auto light_out = new CWWWSinglepintempandbrightnessLightOutput(id(output_brightness), id(output_color_temp));
+#    App.register_component(light_out);
+#    return {light_out};
+#  lights:
+#    - name: $upper_devicename
+#- platform: rgb
+#  name: "Mitesh Room Lamp RGB"
+#  red: output_red
+#  green: output_green
+#  blue: output_blue
+#  default_transition_length: 0.5s
+#  restore_mode: RESTORE_DEFAULT_OFF
+
+light:
+  - platform: custom
+    lambda: |-
+      auto light_out = new BPA800_P(id(output_red), id(output_green), id(output_blue), id(output_brightness), id(output_color_temp));
+      App.register_component(light_out);
+      return {light_out};
+    lights:
+      - name: "Mitesh Room Lamp"
+        restore_mode: RESTORE_DEFAULT_OFF

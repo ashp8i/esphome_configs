@@ -1,0 +1,76 @@
+esphome:
+  name: parentsroomlight
+  platform: ESP8266
+  board: esp01_1m
+
+wifi:
+    ssid: !secret wifi_1st_ssid
+    password: !secret wifi_1st_password
+
+    # Enable fallback hotspot (captive portal) in case wifi connection fails
+    ap:
+      ssid: "Parents Room Light"
+      password: !secret ap_password
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api_password
+
+ota:
+  password: !secret ota_password
+
+web_server:
+  port: 80
+
+substitutions:
+  frequency_rgb: 100 Hz
+  frequency_cw: 1000 Hz
+  frequency_ww: 1000 Hz
+
+output:
+  - platform: esp8266_pwm
+    id: output_red
+    pin: GPIO4
+    max_power: 100%
+    frequency: ${frequency_rgb}
+  - platform: esp8266_pwm
+    id: output_green
+    pin: GPIO12
+    max_power: 100%
+    frequency: ${frequency_rgb}
+  - platform: esp8266_pwm
+    id: output_blue
+    pin: GPIO14
+    max_power: 100%
+    frequency: ${frequency_rgb}
+  - platform: esp8266_pwm
+    id: output_cold_white
+    max_power: 100%
+    frequency: ${frequency_cw}
+    pin: GPIO5
+  - platform: esp8266_pwm
+    id: output_warm_white
+    pin: GPIO13
+    max_power: 100%
+    frequency: ${frequency_ww}
+
+light:
+  - platform: rgb
+    name: "Parents Room Light RGB"
+    red: output_red
+    green: output_green
+    blue: output_blue
+    default_transition_length: 0.5s
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: cwww
+    name: "Parents Room Light Tunable White"
+    cold_white: output_cold_white
+    warm_white: output_warm_white
+    cold_white_color_temperature: 6536 K
+    warm_white_color_temperature: 2000 K
+    default_transition_length: 0.5s
