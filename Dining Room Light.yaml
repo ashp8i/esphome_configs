@@ -240,6 +240,45 @@ light:
           update_interval: 5s
       - strobe:
           name: Default Strobe
+      - flicker:
+          alpha: 50% #The percentage that the last color value should affect the light. More or less the “forget-factor” of an exponential moving average. Defaults to 95%.
+          intensity: 50% #The intensity of the flickering, basically the maximum amplitude of the random offsets. Defaults to 1.5%.
+      - lambda:
+          name: Color Cycle
+          update_interval: 11s
+          lambda: |-
+            static int state = 0;
+            auto call = id(diningroomlightrgb).turn_on();
+            call.set_transition_length(10000);
+            if (state == 0) {
+              call.set_rgb(1.0, 0.0, 0.0); // red
+            } else if (state == 1) {
+              call.set_rgb(1.0, 0.5, 0.0); // orange
+            } else if (state == 2) {
+              call.set_rgb(1.0, 0.86, 0.0); // yellow
+            } else if (state == 3) {
+              call.set_rgb(0.75, 1.0, 0.0); // chartreuse
+            } else if (state == 4) {
+              call.set_rgb(0.0, 1.0, 0.0); // green
+            } else if (state == 5) {
+              call.set_rgb(0.0, 1.0, 0.5); // spring green
+            } else if (state == 6) {
+              call.set_rgb(0.0, 1.0, 1.0); // cyan
+            } else if (state == 7) {
+              call.set_rgb(0.0, 0.5, 1.0); // azure
+            } else if (state == 8) {
+              call.set_rgb(0.0, 0.0, 1.0); // blue
+            } else if (state == 9) {
+              call.set_rgb(0.5, 0.0, 1.0); // violet
+            } else if (state == 10) {
+              call.set_rgb(1.0, 0.0, 1.0); // magenta
+            } else if (state == 11) {
+              call.set_rgb(1.0, 0.0, 0.5); // rose
+            }
+            call.perform();
+            state++;
+            if (state == 12)
+              state = 0;
       - strobe:
           name: In Alarm
           colors:
