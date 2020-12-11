@@ -136,6 +136,11 @@ binary_sensor:
     on_press:
       then:
         - light.turn_off: "diningroomlight"
+        
+# slow smooth fade transition 
+# fast pulse fade transition
+# pulsing transtion red, blue, green only
+# color skipping (no fade) red, yellow, green, light blue, blue, pink, white 
 
   - platform: remote_receiver
     name: "RGB Colour Toggle Button"
@@ -145,6 +150,12 @@ binary_sensor:
     on_press:
       then:
         - light.turn_off: "diningroomlight"
+# red
+# yellow
+# green
+# light blue
+# blue
+# pink
 
   - platform: remote_receiver
     name: "Warm Light Button"
