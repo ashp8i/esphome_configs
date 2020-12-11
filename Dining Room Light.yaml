@@ -140,7 +140,7 @@ binary_sensor:
 # slow smooth fade transition 
 # fast pulse fade transition
 # pulsing transtion red, blue, green only
-# color skipping (no fade) red, yellow, green, light blue, blue, pink, white 
+# color skipping (no fade) red, yellow, green, light blue, blue, pink, white
 
   - platform: remote_receiver
     name: "RGB Colour Toggle Button"
