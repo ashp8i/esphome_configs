@@ -81,8 +81,8 @@ remote_receiver:
   - nec
 #  tolerance: 25%
 #  buffer_size: 1kB
-#  filter: 10us
-#  idle: 10us
+#  filter: 5us
+#  idle: 5ms
 
 binary_sensor:
   - platform: remote_receiver
