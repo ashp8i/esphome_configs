@@ -122,41 +122,40 @@ binary_sensor:
 #          else:
           - lambda: |-
               float current_temp = id(diningroomlight).current_values.get_color_temperature();
-              
               auto call = id(diningroomlight).turn_on();
               call.set_color_temperature(current_temp + 250);
               call.set_transition_length(1000); // in ms
               call.perform();
 
           - lambda: |-
-            const float L0 = 0.02f;
-            const float L1 = 0.2f;
-            const float L2 = 0.5f;
-            const float L3 = 1.0f;
-            float brightness;
-            auto call = id(light_main).turn_on();
-            id(light_main).current_values_as_brightness( &brightness );
-            if( brightness < (L1-0.02))
+            const float M0 = 0.02f;
+            const float M1 = 0.2f;
+            const float M2 = 0.5f;
+            const float M3 = 1.0f;
+            float colour_temperature
+            auto call = id(diningroomlight).turn_on();
+            id(diningroomlight).current_values.get_color_temperature();( &colour_temperature );
+            if(colour_temperature < (M1-0.02))
             {
-              ESP_LOGD("test", "L1");
-              brightness = L1;
+              ESP_LOGD("test", "M1");
+              colour_temperature = M1;
             }
-            else if(brightness < L2-0.02)
+            else if(colour_temperature < M2-0.02)
             {
-              ESP_LOGD("test", "L2");
-              brightness = L2;
+              ESP_LOGD("test", "M2");
+              colour_temperature = M2;
             }
-            else if (brightness < L3-0.02)
+            else if (colour_temperature < M3-0.02)
             {
-              ESP_LOGD("test", "L3");
-              brightness = L3;
+              ESP_LOGD("test", "M3");
+              colour_temperature = M3;
             }
             else
             {
-              ESP_LOGD("test", "L0");
-              brightness = L0;
+              ESP_LOGD("test", "M0");
+              colour_temperature = M0;
             }
-            call.set_brightness( brightness );
+            call.set_color_temperature( colour_temperature );
             call.perform(); 
 
   - platform: remote_receiver
