@@ -136,36 +136,36 @@ binary_sensor:
               call.set_transition_length(1000); // in ms
               call.perform();
 
-          - lambda: |-
-            const float M0 = 0.02f;
-            const float M1 = 0.2f;
-            const float M2 = 0.5f;
-            const float M3 = 1.0f;
-            float colour_temperature
-            auto call = id${device_name}.turn_on();
-            id${device_name}.current_values.get_color_temperature();( &colour_temperature );
-            if(colour_temperature < (M1-0.02))
-            {
-              ESP_LOGD("test", "M1");
-              colour_temperature = M1;
-            }
-            else if(colour_temperature < M2-0.02)
-            {
-              ESP_LOGD("test", "M2");
-              colour_temperature = M2;
-            }
-            else if (colour_temperature < M3-0.02)
-            {
-              ESP_LOGD("test", "M3");
-              colour_temperature = M3;
-            }
-            else
-            {
-              ESP_LOGD("test", "M0");
-              colour_temperature = M0;
-            }
-            call.set_color_temperature( colour_temperature );
-            call.perform(); 
+#          - lambda: |-
+#            const float M0 = 0.02f;
+#            const float M1 = 0.2f;
+#            const float M2 = 0.5f;
+#            const float M3 = 1.0f;
+#            float colour_temperature
+#            auto call = id${device_name}.turn_on();
+#            id${device_name}.current_values.get_color_temperature();( &colour_temperature );
+#            if(colour_temperature < (M1-0.02))
+#            {
+#              ESP_LOGD("test", "M1");
+#              colour_temperature = M1;
+#            }
+#            else if(colour_temperature < M2-0.02)
+#            {
+#              ESP_LOGD("test", "M2");
+#              colour_temperature = M2;
+#            }
+#            else if (colour_temperature < M3-0.02)
+#            {
+#              ESP_LOGD("test", "M3");
+#              colour_temperature = M3;
+#            }
+#            else
+#            {
+#              ESP_LOGD("test", "M0");
+#              colour_temperature = M0;
+#            }
+#            call.set_color_temperature( colour_temperature );
+#            call.perform();
 
   - platform: remote_receiver
     name: "Mood Light Button"
@@ -176,36 +176,36 @@ binary_sensor:
       then:
         - light.turn_off: "${device_name}"
 
-        - lambda: |-
-            const float L0 = 0.02f;
-            const float L1 = 0.2f;
-            const float L2 = 0.5f;
-            const float L3 = 1.0f;
-            float brightness;
-            auto call = id(light_main).turn_on();
-            id(light_main).current_values_as_brightness( &brightness );
-            if( brightness < (L1-0.02))
-            {
-              ESP_LOGD("test", "L1");
-              brightness = L1;
-            }
-            else if(brightness < L2-0.02)
-            {
-              ESP_LOGD("test", "L2");
-              brightness = L2;
-            }
-            else if (brightness < L3-0.02)
-            {
-              ESP_LOGD("test", "L3");
-              brightness = L3;
-            }
-            else
-            {
-              ESP_LOGD("test", "L0");
-              brightness = L0;
-            }
-            call.set_brightness( brightness );
-            call.perform(); 
+#        - lambda: |-
+#            const float L0 = 0.02f;
+#            const float L1 = 0.2f;
+#            const float L2 = 0.5f;
+#            const float L3 = 1.0f;
+#            float brightness;
+#            auto call = id(light_main).turn_on();
+#            id(light_main).current_values_as_brightness( &brightness );
+#            if( brightness < (L1-0.02))
+#            {
+#              ESP_LOGD("test", "L1");
+#              brightness = L1;
+#            }
+#            else if(brightness < L2-0.02)
+#            {
+#              ESP_LOGD("test", "L2");
+#              brightness = L2;
+#            }
+#            else if (brightness < L3-0.02)
+#            {
+#              ESP_LOGD("test", "L3");
+#              brightness = L3;
+#            }
+#            else
+#            {
+#              ESP_LOGD("test", "L0");
+#              brightness = L0;
+#            }
+#            call.set_brightness( brightness );
+#            call.perform(); 
         
 # slow smooth fade transition 
 # fast pulse fade transition
@@ -213,14 +213,14 @@ binary_sensor:
 # color skipping (no fade) red, yellow, green, light blue, blue, pink, white
 # color skipping (no fade) red, yellow, green, light blue, blue, pink, white 
 
-- light.turn_on:
-            id: ${device_name}
-            red: 100%
-            green: 0%
-            blue: 0%
-            white: 0%
-            effect: None
-
+#  - light.turn_on:
+#            id: ${device_name}
+#            red: 100%
+#            green: 0%
+#            blue: 0%
+#            white: 0%
+#            effect: None
+#
   - platform: remote_receiver
     name: "RGB Colour Toggle Button"
     nec:
@@ -230,53 +230,53 @@ binary_sensor:
       then:
         - light.turn_off: "${device_name}"
 # red
-- light.turn_on:
-            id: ${device_name}
-            red: 100%
-            green: 0%
-            blue: 0%
-            white: 0%
-            effect: None
+#- light.turn_on:
+#            id: ${device_name}
+#            red: 100%
+#            green: 0%
+#            blue: 0%
+#            white: 0%
+#            effect: None
 # yellow
-- light.turn_on:
-            id: ${device_name}
-            red: 100%
-            green: 0%
-            blue: 0%
-            white: 0%
-            effect: None
+#- light.turn_on:
+#            id: ${device_name}
+#            red: 100%
+#            green: 0%
+#            blue: 0%
+#            white: 0%
+#            effect: None
 # green
-- light.turn_on:
-            id: ${device_name}
-            red: 100%
-            green: 0%
-            blue: 0%
-            white: 0%
-            effect: None
+#- light.turn_on:
+#            id: ${device_name}
+#            red: 100%
+#            green: 0%
+#            blue: 0%
+#            white: 0%
+#            effect: None
 # light blue
-- light.turn_on:
-            id: ${device_name}
-            red: 100%
-            green: 0%
-            blue: 0%
-            white: 0%
-            effect: None
+#- light.turn_on:
+#            id: ${device_name}
+#            red: 100%
+#            green: 0%
+#            blue: 0%
+#            white: 0%
+#            effect: None
 # blue
-- light.turn_on:
-            id: ${device_name}
-            red: 100%
-            green: 0%
-            blue: 0%
-            white: 0%
-            effect: None
+#- light.turn_on:
+#            id: ${device_name}
+#            red: 100%
+#            green: 0%
+#            blue: 0%
+#            white: 0%
+#            effect: None
 # pink
-- light.turn_on:
-            id: ${device_name}
-            red: 100%
-            green: 0%
-            blue: 0%
-            white: 0%
-            effect: None
+#- light.turn_on:
+#            id: ${device_name}
+#            red: 100%
+#            green: 0%
+#            blue: 0%
+#            white: 0%
+#            effect: None
 
   - platform: remote_receiver
     name: "Warm Light Button"
@@ -378,7 +378,7 @@ light:
           update_interval: 11s
           lambda: |-
             static int state = 0;
-            auto call = id(${device_name}rgb).turn_on();
+            auto call = id(${device_name_rgb}).turn_on();
             call.set_transition_length(10000);
             if (state == 0) {
               call.set_rgb(1.0, 0.0, 0.0); // red
@@ -446,20 +446,19 @@ light:
               duration: 100ms
       
       - lambda:
-        name: Throb
-        update_interval: 1s
-        lambda: |-
-          static int state = 0;
-          auto call = id(thelight).turn_on();
-          // Transtion of 1000ms = 1s
-          call.set_transition_length(1000);
-          if (state == 0) {
-            call.set_brightness(1.0);
-          } else {
-            call.set_brightness(0.01);
-          }
-          call.perform();
-          state += 1;
-          if (state == 2)
-            state = 0;
-
+          name: Throb
+          update_interval: 1s
+          lambda: |-
+            static int state = 0;
+            auto call = id(${device_name_rgb).turn_on();
+            // Transtion of 1000ms = 1s
+            call.set_transition_length(1000);
+            if (state == 0) {
+              call.set_brightness(1.0);
+            } else {
+              call.set_brightness(0.01);
+            }
+            call.perform();
+            state += 1;
+            if (state == 2)
+              state = 0;
