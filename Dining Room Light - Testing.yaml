@@ -1,0 +1,137 @@
+substitutions:
+  device_ssid: "Dining Room Light"
+  device_name: diningroomlight
+  device_main_description: "RGBWW Ceiling LED light with RF remote located in Dining Room with discreet Tunable White & RGB Rear Light (shows up as separate lights)."
+  device_description: Dining Room Light - Main Light
+  friendly_name: "Dining Room Light - Tunable White"    # Put the name that you want to see in Home Assistant.
+  device_name_rgb: diningroomlightrgb
+  device_description_rgb: "Dining Room Light - RGB Rear."    # Put the name that you want to see in Home Assistant.
+  friendly_name_rgb: "Dining Room Light RGB"
+  frequency_rgb: 100 Hz
+  frequency_cw: 250 Hz
+  frequency_ww: 250 Hz
+
+esphome:
+  name: ${device_name}
+  platform: ESP8266
+  board: esp01_1m
+
+wifi:
+    ssid: !secret wifi_1st_ssid
+    password: !secret wifi_1st_password
+
+    # Enable fallback hotspot (captive portal) in case wifi connection fails
+    ap:
+      ssid: ${device_ssid}
+      password: !secret ap_password
+
+captive_portal:
+
+# Enable logging
+# Example configuration entry
+debug:
+
+# Logger must be at least debug (default)
+logger:
+  level: debug
+
+# Enable Home Assistant API
+api:
+  password: !secret api_password
+
+ota:
+  password: !secret ota_password
+
+web_server:
+  port: 80
+
+
+output:
+  - platform: esp8266_pwm
+    id: output_red
+    pin: GPIO5
+    max_power: 100%
+    frequency: ${frequency_rgb}
+  - platform: esp8266_pwm
+    id: output_green
+    pin: GPIO4
+    max_power: 100%
+    frequency: ${frequency_rgb}
+  - platform: esp8266_pwm
+    id: output_blue
+    pin: GPIO14
+    max_power: 100%
+    frequency: ${frequency_rgb}
+  - platform: esp8266_pwm
+    id: output_cold_white
+    max_power: 100%
+    frequency: ${frequency_cw}
+    pin: GPIO12
+  - platform: esp8266_pwm
+    id: output_warm_white
+    pin: GPIO13
+    max_power: 100%
+    frequency: ${frequency_ww}
+    
+remote_receiver:
+  pin:
+    number: GPIO2
+    inverted: True
+  dump: 
+  - nec
+#  tolerance: 25%
+#  buffer_size: 1kB
+#  filter: 5us
+#  idle: 5ms
+
+binary_sensor:
+  - platform: remote_receiver
+    name: "Bright+ Button"
+    nec:
+      address: 0xFF00
+      command: 0xA05F
+    id: brightbutton
+    on_press:
+      - while:
+          condition:
+            binary_sensor.is_on: brightbutton
+          then:
+            - light.dim_relative:
+                id: diningroomlight
+                relative_brightness: 5%
+                transition_length: 1s
+
+
+  - platform: remote_receiver
+    name: "Dim- Button"
+    nec:
+      address: 0xFF00
+      command: 0x609F
+    id: dimbutton
+    on_press:
+      - while:
+          condition:
+            binary_sensor.is_on: dimbutton
+          then:
+            - light.dim_relative:
+                id: diningroomlight
+                relative_brightness: -5%
+                transition_length: 1s
+
+light:
+  - platform: cwww
+    name: ${friendly_name}    # Put the name that you want to see in Home Assistant.
+    id: ${device_name}    # id used in esphome.
+    cold_white: output_cold_white
+    warm_white: output_warm_white
+    cold_white_color_temperature: 6536 K
+    warm_white_color_temperature: 2000 K
+    default_transition_length: 0.5s
+  - platform: rgb
+    name: ${friendly_name_rgb}
+    id: ${device_name_rgb}
+    red: output_red
+    green: output_green
+    blue: output_blue
+    default_transition_length: 0.5s
+    restore_mode: RESTORE_DEFAULT_OFF
