@@ -1,18 +1,18 @@
 substitutions:
-  device_name: led_strip
-  device_name_rgb: led_strip
-  device_description: RGBWW Ceiling Light with Swparate CWWW and RGB lights - Main Light
-  device_description_rgb: RGBWW Ceiling Light with Swparate CWWW and RGB lights - RGB Light
-  friendly_name: "Dining Room Light Tunable WHite"
-  friendly_name_RGB: "Dining Room Light RGB"
+  device_ssid: "Dining Room Light"
+  device_name: diningroomlight
+  device_main_description: RGBWW Ceiling LED light with RF remote located in Dining Room with discreet Tunable White & RGB Rear Light (shows up as separate lights).
+  device_description: Dining Room Light - Main Light
+  friendly_name: "Dining Room Light - Tunable White"    # Put the name that you want to see in Home Assistant.
+  device_name_rgb: diningroomlightrgb
+  device_description_rgb: Dining Room Light - RGB Rear.    # Put the name that you want to see in Home Assistant.
+  friendly_name_rgb: "Dining Room Light RGB"
   frequency_rgb: 100 Hz
-#  frequency_cw: 250 Hz
-  frequency_cw: 1000 Hz
-#  frequency_ww: 250 Hz
-  frequency_ww: 1000 Hz
+  frequency_cw: 250 Hz
+  frequency_ww: 250 Hz
 
 esphome:
-  name: diningroomlight
+  name: ${device_name}
   platform: ESP8266
   board: esp01_1m
 
@@ -22,7 +22,7 @@ wifi:
 
     # Enable fallback hotspot (captive portal) in case wifi connection fails
     ap:
-      ssid: "Dining Room Light"
+      ssid: ${device_ssid}
       password: !secret ap_password
 
 captive_portal:
@@ -80,27 +80,27 @@ remote_receiver:
   - nec
 #  tolerance: 25%
 #  buffer_size: 1kB
-#  filter: 10us
-#  idle: 10us
+#  filter: 5us
+#  idle: 5ms
 
 binary_sensor:
   - platform: remote_receiver
-    name: "Remote On Button"
+    name: "On Button"
     nec:
       address: 0xFF00
       command: 0xC03F
     on_press:
       then:
-        - light.turn_on: "diningroomlight"
+        - light.turn_on: "${device_name}"
         
   - platform: remote_receiver
-    name: "Remote Off Button"
+    name: Off Button"
     nec:
       address: 0xFF00
       command: 0x20DF
     on_press:
       then:
-        - light.turn_off: "diningroomlight"
+        - light.turn_off: "${device_name}"
 
   - platform: remote_receiver
     name: "Night Light Button"
@@ -109,9 +109,9 @@ binary_sensor:
       command: 0x906F
     on_press:
       then:
-        - light.turn_on: "diningroomlight"
+        - light.turn_on: "${device_name}"
         - delay: 30 min
-        - light.turn_off: "diningroomlight"
+        - light.turn_off: "${device_name}"
 
   - platform: remote_receiver
     name: "Main Light Button"
@@ -128,12 +128,42 @@ binary_sensor:
 #            - light.turn_on: my_light
 #            - delay: 5s
 #          else:
+#          - lambda: |-
+#              float current_temp = id${device_name}.current_values.get_color_temperature();
+#              auto call = id${device_name}.turn_on();
+#              call.set_color_temperature(current_temp + 250);
+#              call.set_transition_length(1000); // in ms
+#              call.perform();
+#
           - lambda: |-
-              float current_temp = id(diningroomlight).current_values.get_color_temperature();
-              
-              auto call = id(diningroomlight).turn_on();
-              call.set_color_temperature(current_temp + 250);
-              call.set_transition_length(1000); // in ms
+              const float M0 = 0.02f;
+              const float M1 = 0.2f;
+              const float M2 = 0.5f;
+              const float M3 = 1.0f;
+              float colour_temperature
+              auto call = id${device_name}.turn_on();
+              id${device_name}.current_values.get_color_temperature();( &colour_temperature );
+              if(colour_temperature < (M1-0.02))
+              {
+                ESP_LOGD("test", "M1");
+                colour_temperature = M1;
+              }
+              else if(colour_temperature < M2-0.02)
+              {
+                ESP_LOGD("test", "M2");
+                colour_temperature = M2;
+              }
+              else if (colour_temperature < M3-0.02)
+              {
+                ESP_LOGD("test", "M3");
+                colour_temperature = M3;
+              }
+              else
+              {
+                ESP_LOGD("test", "M0");
+                colour_temperature = M0;
+              }
+              call.set_color_temperature( colour_temperature );
               call.perform();
 
   - platform: remote_receiver
@@ -143,21 +173,53 @@ binary_sensor:
       command: 0xD02F
     on_press:
       then:
-        - light.turn_off: "diningroomlight"
+        - light.turn_off: "${device_name}"
+
+#        - lambda: |-
+#            const float L0 = 0.02f;
+#            const float L1 = 0.2f;
+#            const float L2 = 0.5f;
+#            const float L3 = 1.0f;
+#            float brightness;
+#            auto call = id(light_main).turn_on();
+#            id(light_main).current_values_as_brightness( &brightness );
+#            if( brightness < (L1-0.02))
+#            {
+#              ESP_LOGD("test", "L1");
+#              brightness = L1;
+#            }
+#            else if(brightness < L2-0.02)
+#            {
+#              ESP_LOGD("test", "L2");
+#              brightness = L2;
+#            }
+#            else if (brightness < L3-0.02)
+#            {
+#              ESP_LOGD("test", "L3");
+#              brightness = L3;
+#            }
+#            else
+#            {
+#              ESP_LOGD("test", "L0");
+#              brightness = L0;
+#            }
+#            call.set_brightness( brightness );
+#            call.perform(); 
         
 # slow smooth fade transition 
 # fast pulse fade transition
 # pulsing transtion red, blue, green only
 # color skipping (no fade) red, yellow, green, light blue, blue, pink, white
+# color skipping (no fade) red, yellow, green, light blue, blue, pink, white 
 
-- light.turn_on:
-            id: ${device_name_rgb}
-            red: 100%
-            green: 0%
-            blue: 0%
-            white: 0%
-            effect: None
-
+#  - light.turn_on:
+#            id: ${device_name}
+#            red: 100%
+#            green: 0%
+#            blue: 0%
+#            white: 0%
+#            effect: None
+#
   - platform: remote_receiver
     name: "RGB Colour Toggle Button"
     nec:
@@ -165,55 +227,55 @@ binary_sensor:
       command: 0x30CF
     on_press:
       then:
-        - light.turn_off: "diningroomlight"
+        - light.turn_off: "${device_name}"
 # red
-- light.turn_on:
-            id: ${device_name_rgb}
-            red: 100%
-            green: 0%
-            blue: 0%
-            white: 0%
-            effect: None
+#- light.turn_on:
+#            id: ${device_name}
+#            red: 100%
+#            green: 0%
+#            blue: 0%
+#            white: 0%
+#            effect: None
 # yellow
-- light.turn_on:
-            id: ${device_name_rgb}
-            red: 100%
-            green: 0%
-            blue: 0%
-            white: 0%
-            effect: None
+#- light.turn_on:
+#            id: ${device_name}
+#            red: 100%
+#            green: 0%
+#            blue: 0%
+#            white: 0%
+#            effect: None
 # green
-- light.turn_on:
-            id: ${device_name_rgb}
-            red: 100%
-            green: 0%
-            blue: 0%
-            white: 0%
-            effect: None
+#- light.turn_on:
+#            id: ${device_name}
+#            red: 100%
+#            green: 0%
+#            blue: 0%
+#            white: 0%
+#            effect: None
 # light blue
-- light.turn_on:
-            id: ${device_name_rgb}
-            red: 100%
-            green: 0%
-            blue: 0%
-            white: 0%
-            effect: None
+#- light.turn_on:
+#            id: ${device_name}
+#            red: 100%
+#            green: 0%
+#            blue: 0%
+#            white: 0%
+#            effect: None
 # blue
-- light.turn_on:
-            id: ${device_name_rgb}
-            red: 100%
-            green: 0%
-            blue: 0%
-            white: 0%
-            effect: None
+#- light.turn_on:
+#            id: ${device_name}
+#            red: 100%
+#            green: 0%
+#            blue: 0%
+#            white: 0%
+#            effect: None
 # pink
-- light.turn_on:
-            id: ${device_name_rgb}
-            red: 100%
-            green: 0%
-            blue: 0%
-            white: 0%
-            effect: None
+#- light.turn_on:
+#            id: ${device_name}
+#            red: 100%
+#            green: 0%
+#            blue: 0%
+#            white: 0%
+#            effect: None
 
   - platform: remote_receiver
     name: "Warm Light Button"
@@ -223,9 +285,9 @@ binary_sensor:
     on_press:
         then:
           - lambda: |-
-              float current_temp = id(diningroomlight).current_values.get_color_temperature();
+              float current_temp = id${device_name}.current_values.get_color_temperature();
               
-              auto call = id(diningroomlight).turn_on();
+              auto call = id${device_name}.turn_on();
               call.set_color_temperature(current_temp + 150);
               call.set_transition_length(2000); // in ms
               call.perform();
@@ -238,9 +300,9 @@ binary_sensor:
     on_press:
         then:
           - lambda: |-
-              float current_temp = id(diningroomlight).current_values.get_color_temperature();
+              float current_temp = id${device_name}.current_values.get_color_temperature();
               
-              auto call = id(diningroomlight).turn_on();
+              auto call = id${device_name}.turn_on();
               call.set_color_temperature(current_temp - 150);
               call.set_transition_length(2000); // in ms
               call.perform();
@@ -258,10 +320,9 @@ binary_sensor:
             binary_sensor.is_on: brightbutton
           then:
             - light.dim_relative:
-                id: ${device_name_rgb}
+                id: ${device_name}
                 relative_brightness: 5%
-                transition_length: 0.1s
-            - delay: 0.05s
+                transition_length: 0.25s
 
 #  - platform: remote_receiver
 #    name: "Bright+ Button"
@@ -294,32 +355,20 @@ binary_sensor:
             - light.dim_relative:
                 id: ${device_name}
                 relative_brightness: -5%
-                transition_length: 0.1s
-            - delay: 0.05s
-
-#    on_press:
-#      - while:
-#          condition:
-#            binary_sensor.is_on: dimbutton
-#          then:
-#            - light.dim_relative:
-#                id: ${device_name_rgb}
-#                relative_brightness: -5%
-#                transition_length: 0.1s
-#            - delay: 0.1s
+                transition_length: 0.25s
 
 light:
   - platform: cwww
-    name: ${friendly_name}
-    id: ${device_name}
+    name: "${friendly_name}"    # Put the name that you want to see in Home Assistant.
+    id: "${device_name}"    # id used in esphome.
     cold_white: output_cold_white
     warm_white: output_warm_white
     cold_white_color_temperature: 6536 K
     warm_white_color_temperature: 2000 K
     default_transition_length: 0.5s
   - platform: rgb
-    name: ${friendly_name_rgb}
-    id: ${device_name_rgb}
+    name: "${friendly_name_rgb}"
+    id: "${device_name_rgb}"
     red: output_red
     green: output_green
     blue: output_blue
@@ -344,7 +393,7 @@ light:
           update_interval: 11s
           lambda: |-
             static int state = 0;
-            auto call = id(diningroomlightrgb).turn_on();
+            auto call = id(${device_name_rgb}).turn_on();
             call.set_transition_length(10000);
             if (state == 0) {
               call.set_rgb(1.0, 0.0, 0.0); // red
@@ -410,3 +459,21 @@ light:
               duration: 150ms
             - state: False
               duration: 100ms
+      
+      - lambda:
+          name: Throb
+          update_interval: 1s
+          lambda: |-
+            static int state = 0;
+            auto call = id(${device_name_rgb).turn_on();
+            // Transtion of 1000ms = 1s
+            call.set_transition_length(1000);
+            if (state == 0) {
+              call.set_brightness(1.0);
+            } else {
+              call.set_brightness(0.01);
+            }
+            call.perform();
+            state += 1;
+            if (state == 2)
+              state = 0;
