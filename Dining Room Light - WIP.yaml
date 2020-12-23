@@ -308,7 +308,7 @@ binary_sensor:
 #              call.set_transition_length(2000); // in ms
 #              call.perform();
 #
-  - platform: remote_receiver
+- platform: remote_receiver
     name: "Bright+ Button"
     nec:
       address: 0xFF00
@@ -322,7 +322,8 @@ binary_sensor:
             - light.dim_relative:
                 id: diningroomlight
                 relative_brightness: 5%
-                transition_length: 1s
+                transition_length: 0.1s
+            - delay: 0.1s
 
 
   - platform: remote_receiver
@@ -339,7 +340,8 @@ binary_sensor:
             - light.dim_relative:
                 id: diningroomlight
                 relative_brightness: -5%
-                transition_length: 1s
+                transition_length: 0.1s
+            - delay: 0.1s
 
 light:
   - platform: cwww
