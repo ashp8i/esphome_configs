@@ -104,6 +104,92 @@ binary_sensor:
         - light.turn_off: "${device_name}"
 
   - platform: remote_receiver
+    name: "Night Mode Button"
+    nec:
+      address: 0xFF00
+      command: 0x906F
+    on_press:
+      then:
+        - lambda: |-
+            auto call = id(${device_name}).turn_on();
+            call.set_color_temperature(500); // in mireds
+            call.set_brightness(0.08);
+            call.set_transition_length(1000); // in ms
+            call.perform();
+        - delay: 0.1s
+
+  - platform: remote_receiver
+    name: "Main Light Button"
+    nec:
+      address: 0xFF00
+      command: 0x50AF
+    on_press:
+        then:
+        - lambda: |-
+            auto call = id(${device_name_rgb}).turn_off();
+            call.perform();
+            #define cwwwmode1 100mireds //Cool White
+            #define cwwwmode2 300mireds //Natural White
+            #define cwwwmode3 500mireds //Warm WHite
+            static int cwwwmode = 1;
+            call = id(${device_name}).turn_on();
+            call.set_transition_length(1000);
+            switch(cwwwmode)
+            {
+            case 1: call.set_color_temperature(100);
+                    break;
+            case 2: call.set_color_temperature(300);
+                    break;
+            case 3: call.set_color_temperature(500);
+                    break;
+            }
+            cwwwmode++;
+            if(cwwwmode == 4)
+            {
+              cwwwmode = 1;
+            }
+            call.perform();
+            
+  - platform: remote_receiver
+    name: "Mood Light Button"
+    nec:
+      address: 0xFF00
+      command: 0xD02F
+    on_press:
+      then:
+        - lambda: |-
+            auto call = id(${device_name}).turn_off();
+            call.perform();
+            #define Effect1 //Effect1
+            #define Effect2 //Effect2
+            #define Effect3 //Effect3
+            #define Effect4 //Effect4
+            static int effect = 1;
+            call = id(${device_name_rgb}).turn_on();
+            call.set_transition_length(500);
+            switch(effect)
+            {
+            case 1: call.set_rgb(1.0, 0.0, 0.0);
+            //call.set_effect(effect1);
+                    break;
+            case 2: call.set_rgb(1.0, 1.0, 0.0);
+            //call.set_effect(effect2);
+                    break;
+            case 3: call.set_rgb(0.0, 1.0, 0.0);
+            //call.set_effect(effect3);
+                    break;
+            case 4: call.set_rgb(0.0, 1.0, 1.0);
+            //call.set_effect(effect4);
+                    break;
+            }
+            effect++;
+            if(effect == 5)
+            {
+              effect = 1;
+            }
+            call.perform();
+            
+  - platform: remote_receiver
     name: "RGB Colour Toggle Button"
     nec:
       address: 0xFF00
@@ -111,6 +197,8 @@ binary_sensor:
     on_press:
       then:
         - lambda: |-
+            auto call = id(${device_name}).turn_off();
+            call.perform();
             #define Color1 1.0, 0.0, 0.0 //Red
             #define Color2 1.0, 1.0, 0.0 //Yellow
             #define Color3 0.0, 1.0, 0.0 //Green
@@ -118,7 +206,7 @@ binary_sensor:
             #define Color5 0.0, 0.0, 1.0 //Blue
             #define Color6 1.0, 0.0, 1.0 //Pink 
             static int color = 1;
-            auto call = id(${device_name_rgb}).turn_on(); //put the id for your light in here
+            call = id(${device_name_rgb}).turn_on();
             call.set_transition_length(500);
             switch(color)
             {
