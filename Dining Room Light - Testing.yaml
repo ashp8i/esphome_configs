@@ -111,7 +111,9 @@ binary_sensor:
     on_press:
       then:
         - lambda: |-
-            auto call = id(${device_name}).turn_on();
+            auto call = id(${device_name_rgb}).turn_off();
+            call.perform();
+            call = id(${device_name}).turn_on();
             call.set_color_temperature(500); // in mireds
             call.set_brightness(0.08);
             call.set_transition_length(1000); // in ms
@@ -311,6 +313,7 @@ light:
     warm_white: output_warm_white
     cold_white_color_temperature: 6536 K
     warm_white_color_temperature: 2000 K
+    constant_brightness: true
     default_transition_length: 1s
   - platform: rgb
     name: ${friendly_name_rgb}
