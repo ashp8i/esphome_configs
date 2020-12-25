@@ -320,3 +320,6 @@ light:
     blue: output_blue
     default_transition_length: 0.5s
     restore_mode: RESTORE_DEFAULT_OFF
+
+## TODO's remote_receiver on and off control both cwww and rgb toggle global int
+## Brightness and colour change for rgb light
