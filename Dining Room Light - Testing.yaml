@@ -72,7 +72,13 @@ output:
     pin: GPIO13
     max_power: 100%
     frequency: ${frequency_ww}
-    
+
+globals:
+  - id: last_light_on
+    type: int
+    restore_value: no
+    initial_value: '1'
+
 remote_receiver:
   pin:
     number: GPIO2
@@ -315,6 +321,9 @@ light:
     warm_white_color_temperature: 2000 K
     constant_brightness: true
     default_transition_length: 1s
+    on_turn_on: 
+      - lambda: |-
+          id(last_light_on) = 1;
   - platform: rgb
     name: ${friendly_name_rgb}
     id: ${device_name_rgb}
@@ -323,6 +332,9 @@ light:
     blue: output_blue
     default_transition_length: 0.5s
     restore_mode: RESTORE_DEFAULT_OFF
+    on_turn_on:
+      - lambda: |-
+          id(last_light_on) = 2;
 
 ## TODO's remote_receiver on and off control both cwww and rgb toggle global int
 ## Brightness and colour change for rgb light
