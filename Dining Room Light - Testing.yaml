@@ -96,9 +96,20 @@ binary_sensor:
     nec:
       address: 0xFF00
       command: 0xC03F
+    id: onbutton
     on_press:
       then:
-        - light.turn_on: "${device_name}"
+        - lambda: |-
+            if(id(last_light_on) == 1)
+            {
+            auto call = id(${device_name}).turn_on();
+            call.perform();
+            }
+            else if (id(last_light_on) == 2)
+            {
+            auto call = id(${device_name_rgb}).turn_on();
+            call.perform();
+            }
        
   - platform: remote_receiver
     name: Off Button"
@@ -107,7 +118,17 @@ binary_sensor:
       command: 0x20DF
     on_press:
       then:
-        - light.turn_off: "${device_name}"
+        - lambda: |-
+            if(id(last_light_on) == 1)
+            {
+            auto call = id(${device_name}).turn_off();
+            call.perform();
+            }
+            else if (id(last_light_on) == 2)
+            {
+            auto call = id(${device_name_rgb}).turn_off();
+            call.perform();
+            }
 
   - platform: remote_receiver
     name: "Night Mode Button"
@@ -245,17 +266,25 @@ binary_sensor:
       command: 0x10EF
     id: warmbutton
     on_press:
-      - while:
-          condition:
-            binary_sensor.is_on: warmbutton
-          then:
-            - lambda: |-
-                float current_temp = id(${device_name}).current_values.get_color_temperature();
-                auto call = id(${device_name}).turn_on();
-                call.set_color_temperature(current_temp + 100);
-                call.set_transition_length(1000); // in ms
-                call.perform();
-            - delay: 0.1s
+      then:
+        - lambda: |-
+            if(id(last_light_on) == 1)
+            {
+            float current_temp = id(${device_name}).current_values.get_color_temperature();
+            auto call = id(${device_name}).turn_on();
+            call.set_color_temperature(current_temp + 100);
+            call.set_transition_length(1000); // in ms
+            call.perform();
+            }
+            else if (id(last_light_on) == 2)
+            {
+            float current_temp = id(${device_name_rgb}).current_values.get_color_temperature();
+            auto call = id(${device_name_rgb}).turn_on();
+            call.set_color_temperature(current_temp + 100);
+            call.set_transition_length(1000); // in ms
+            call.perform();
+            }
+        - delay: 0.01s
 
   - platform: remote_receiver
     name: "Cold Light Button"
@@ -264,17 +293,25 @@ binary_sensor:
       command: 0xE01F
     id: coldbutton
     on_press:
-      - while:
-          condition:
-            binary_sensor.is_on: coldbutton
-          then:
-            - lambda: |-
-                float current_temp = id(${device_name}).current_values.get_color_temperature();
-                auto call = id(${device_name}).turn_on();
-                call.set_color_temperature(current_temp - 100);
-                call.set_transition_length(1000); // in ms
-                call.perform();
-            - delay: 0.1s
+      then:
+        - lambda: |-
+            if(id(last_light_on) == 1)
+            {
+            float current_temp = id(${device_name}).current_values.get_color_temperature();
+            auto call = id(${device_name}).turn_on();
+            call.set_color_temperature(current_temp - 100);
+            call.set_transition_length(1000); // in ms
+            call.perform();
+            }
+            else if (id(last_light_on) == 2)
+            {
+            float current_temp = id(${device_name_rgb}).current_values.get_color_temperature();
+            auto call = id(${device_name_rgb}).turn_on();
+            call.set_color_temperature(current_temp - 100);
+            call.set_transition_length(1000); // in ms
+            call.perform();
+            }
+        - delay: 0.01s
 
   - platform: remote_receiver
     name: "Bright+ Button"
@@ -283,16 +320,35 @@ binary_sensor:
       command: 0xA05F
     id: brightbutton
     on_press:
-      - while:
-          condition:
-            binary_sensor.is_on: brightbutton
-          then:
-            - light.dim_relative:
-                id: "${device_name}"
-                relative_brightness: 5%
-                transition_length: 0.1s
-            - delay: 0.1s
-
+      then:
+        - lambda: |-
+            if(id(last_light_on) == 1)
+            {
+            float brightness;
+            auto call = id(${device_name}).turn_on();
+            id(${device_name}).remote_values.as_brightness( &brightness );
+            brightness += 0.1f;
+            if( brightness > 1.0f )
+            {
+              brightness = 1.0f;
+            }
+            call.set_brightness( brightness );
+            call.perform();
+            }
+            else if (id(last_light_on) == 2)
+            {
+            float brightness;
+            auto call = id(${device_name_rgb}).turn_on();
+            id(${device_name_rgb}).remote_values.as_brightness( &brightness );
+            brightness += 0.1f;
+            if( brightness > 1.0f )
+            {
+              brightness = 1.0f;
+            }
+            call.set_brightness( brightness );
+            call.perform();
+            }
+        - delay: 0.01s
 
   - platform: remote_receiver
     name: "Dim- Button"
@@ -301,15 +357,35 @@ binary_sensor:
       command: 0x609F
     id: dimbutton
     on_press:
-      - while:
-          condition:
-            binary_sensor.is_on: dimbutton
-          then:
-            - light.dim_relative:
-                id: "${device_name}"
-                relative_brightness: -5%
-                transition_length: 0.1s
-            - delay: 0.1s
+      then:
+        - lambda: |-
+            if(id(last_light_on) == 1)
+            {
+            float brightness;
+            auto call = id(${device_name}).turn_on();
+            id(${device_name}).remote_values.as_brightness( &brightness );
+            brightness -= 0.1f;
+            if( brightness < 0.0f )
+            {
+              brightness = 0.0f;
+            }
+            call.set_brightness( brightness );
+            call.perform();
+            }
+            else if (id(last_light_on) == 2)
+            {
+            float brightness;
+            auto call = id(${device_name_rgb}).turn_on();
+            id(${device_name_rgb}).remote_values.as_brightness( &brightness );
+            brightness -= 0.1f;
+            if( brightness < 0.0f )
+            {
+              brightness = 0.0f;
+            }
+            call.set_brightness( brightness );
+            call.perform();
+            }
+        - delay: 0.01s
 
 light:
   - platform: cwww
@@ -321,9 +397,10 @@ light:
     warm_white_color_temperature: 2000 K
     constant_brightness: true
     default_transition_length: 1s
-    on_turn_on: 
-      - lambda: |-
-          id(last_light_on) = 1;
+    on_turn_on:
+    - globals.set:
+        id: last_light_on
+        value: '1'
   - platform: rgb
     name: ${friendly_name_rgb}
     id: ${device_name_rgb}
@@ -333,8 +410,9 @@ light:
     default_transition_length: 0.5s
     restore_mode: RESTORE_DEFAULT_OFF
     on_turn_on:
-      - lambda: |-
-          id(last_light_on) = 2;
+    - globals.set:
+        id: last_light_on
+        value: '2'
 
-## TODO's remote_receiver on and off control both cwww and rgb toggle global int
-## Brightness and colour change for rgb light
+## TODO's remote_receiver colour change for rgb light
+## Effects to implement
