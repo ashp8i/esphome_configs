@@ -189,30 +189,24 @@ binary_sensor:
         - lambda: |-
             auto call = id(${device_name}).turn_off();
             call.perform();
-            #define Effect1 //Effect1
-            #define Effect2 //Effect2
-            #define Effect3 //Effect3
-            #define Effect4 //Effect4
             static int effect = 1;
             call = id(${device_name_rgb}).turn_on();
             call.set_transition_length(500);
             switch(effect)
             {
-            case 1: call.set_rgb(1.0, 0.0, 0.0);
-            //call.set_effect(effect1);
+            case 1: call.set_effect("flash");
                     break;
-            case 2: call.set_rgb(1.0, 1.0, 0.0);
-            //call.set_effect(effect2);
+            case 2: call.set_effect("strobe");
                     break;
-            case 3: call.set_rgb(0.0, 1.0, 0.0);
-            //call.set_effect(effect3);
+            case 3: call.set_effect("My Custom Effect");
                     break;
-            case 4: call.set_rgb(0.0, 1.0, 1.0);
-            //call.set_effect(effect4);
+            case 4: call.set_effect("My Custom Effect 2");
+                    break;
+            case 5: call.set_effect("None");
                     break;
             }
             effect++;
-            if(effect == 5)
+            if(effect == 6)
             {
               effect = 1;
             }
@@ -228,14 +222,9 @@ binary_sensor:
         - lambda: |-
             auto call = id(${device_name}).turn_off();
             call.perform();
-            #define Color1 1.0, 0.0, 0.0 //Red
-            #define Color2 1.0, 1.0, 0.0 //Yellow
-            #define Color3 0.0, 1.0, 0.0 //Green
-            #define Color4 0.0, 1.0, 1.0 //Cyan
-            #define Color5 0.0, 0.0, 1.0 //Blue
-            #define Color6 1.0, 0.0, 1.0 //Pink 
             static int color = 1;
             call = id(${device_name_rgb}).turn_on();
+            call.set_effect("None");
             call.set_transition_length(500);
             switch(color)
             {
@@ -413,6 +402,106 @@ light:
     - globals.set:
         id: last_light_on
         value: '2'
+    effects:
+      - random:
+          name: smooth
+          transition_length: 4s
+          update_interval: 5s
+      - strobe:
+          name: strobe
+          colors:
+            - state: True
+              brightness: 80%
+              red: 100%
+              green: 90%
+              blue: 0%
+              white: 0%
+              duration: 500ms
+            - state: False
+              duration: 250ms
+            - state: True
+              brightness: 80%
+              red: 0%
+              green: 100%
+              blue: 0%
+              white: 0%
+              duration: 500ms
+            - state: False
+              duration: 250ms
+            - state: True
+              brightness: 80%
+              red: 0%
+              green: 100%
+              blue: 60%  
+              white: 0%
+              duration: 500ms
+      - flicker:
+          name: flash
+          alpha: 95%
+          intensity: 1.5%
+      - lambda:
+          name: fade
+          update_interval: 1s
+          lambda: |-
+            static int state = 0;
+            auto call = id(${device_name_rgb}).turn_on();
+            // Transtion of 1000ms = 1s
+            call.set_transition_length(1000);
+            if (state == 0) {
+              call.set_rgb(1.0, 1.0, 1.0);
+            } else if (state == 1) {
+              call.set_rgb(1.0, 0.0, 1.0);
+            } else if (state == 2) {
+              call.set_rgb(0.0, 0.0, 1.0);
+            } else {
+              call.set_rgb(1.0, 0.0, 0.0);
+            }
+            call.perform();
+            state += 1;
+            if (state == 4)
+              state = 0;
+      - lambda:
+          name: My Custom Effect
+          update_interval: 1s
+          lambda: |-
+            static int state = 0;
+            auto call = id(${device_name_rgb}).turn_on();
+            // Transtion of 1000ms = 1s
+            call.set_transition_length(1000);
+            if (state == 0) {
+              call.set_rgb(1.0, 1.0, 1.0);
+            } else if (state == 1) {
+              call.set_rgb(1.0, 0.0, 1.0);
+            } else if (state == 2) {
+              call.set_rgb(0.0, 0.0, 1.0);
+            } else {
+              call.set_rgb(1.0, 0.0, 0.0);
+            }
+            call.perform();
+            state += 1;
+            if (state == 4)
+              state = 0;
+      - lambda:
+          name: My Custom Effect 2
+          update_interval: 1s
+          lambda: |-
+            static int state = 0;
+            auto call = id(${device_name_rgb}).turn_on();
+            // Transtion of 1000ms = 1s
+            call.set_transition_length(1000);
+            if (state == 0) {
+              call.set_rgb(1.0, 1.0, 1.0);
+            } else if (state == 1) {
+              call.set_rgb(0.5, 0.0, 1.0);
+            } else if (state == 2) {
+              call.set_rgb(0.0, 0.5, 1.0);
+            } else {
+              call.set_rgb(1.0, 0.0, 0.0);
+            }
+            call.perform();
+            state += 1;
+            if (state == 4)
+              state = 0;
 
 ## TODO's remote_receiver colour change for rgb light
 ## Effects to implement
