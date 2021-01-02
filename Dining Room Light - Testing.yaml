@@ -792,6 +792,38 @@ light:
           name: "Totally Loco Random Effect"
           transition_length: 300ms
           update_interval: 250ms
+      - lambda:
+          name: "Random colour fade"
+          update_interval: 3s
+          lambda: |-
+            auto call = id(${device_name_rgb}).turn_on();    
+            call.set_red_if_supported(random_float());
+            call.set_green_if_supported(random_float());
+            call.set_blue_if_supported(random_float());
+            call.set_white_if_supported(0.0);
+            call.set_transition_length_if_supported(2000);
+            call.set_publish(true);
+      - lambda:
+          name: "Red Green Blue Fade"
+          update_interval: 4s
+          lambda: |-
+            static int state = 0;
+            auto call = id(${device_name_rgb}).turn_on();                                                                           
+            call.set_transition_length(3000);                                                                      
+            if (state == 0) {                                                                             
+              call.set_rgb(1.0, 0.0, 0.0);
+            } else if (state == 1) {                                                                          
+              call.set_rgb(0.0, 1.0, 0.0);
+            } else if (state == 2) {                               
+              call.set_rgb(0.0, 0.0, 1.0);
+            } else {                                                       
+              call.set_rgb(1.0, 0.0, 0.0);
+            }                             
+            call.set_white(0.0);
+            call.perform();                                                                        
+            state += 1;                                                                                           
+            if (state == 3)
+              state = 0;
                   
 ## TODO's remote_receiver colour change for rgb light (feature request  #429 esphome needs to support hsv first)
 ## Match Original MagicHome Effects
