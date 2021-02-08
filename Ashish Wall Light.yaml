@@ -1,5 +1,11 @@
+substitutions:
+  device_ssid: "Ashish Wall Light"
+  device_name: ashishwalllight
+  device_main_description: "UT55509-RGBCW - Novostella UT55509 13W 1300lm RGBCCT Bulb."
+  device_description: Ashish Wall Light
+  friendly_name: "Ashish Wall Light"    # Put the name that you want to see in Home Assistant.
 esphome:
-  name: parentsroomlight
+  name: ${device_name}
   platform: ESP8266
   board: esp01_1m
 
@@ -9,13 +15,18 @@ wifi:
 
     # Enable fallback hotspot (captive portal) in case wifi connection fails
     ap:
-      ssid: "Parents Room Light"
+      ssid: ${device_ssid}
       password: !secret ap_password
 
 captive_portal:
 
 # Enable logging
+# Example configuration entry
+debug:
+
+# Logger must be at least debug (default)
 logger:
+  level: debug
 
 # Enable Home Assistant API
 api:
@@ -27,50 +38,34 @@ ota:
 web_server:
   port: 80
 
-substitutions:
-  frequency_rgb: 100 Hz
-  frequency_cw: 1000 Hz
-  frequency_ww: 1000 Hz
 
 output:
   - platform: esp8266_pwm
     id: output_red
     pin: GPIO4
-    max_power: 100%
-    frequency: ${frequency_rgb}
   - platform: esp8266_pwm
     id: output_green
     pin: GPIO12
-    max_power: 100%
-    frequency: ${frequency_rgb}
   - platform: esp8266_pwm
     id: output_blue
     pin: GPIO14
-    max_power: 100%
-    frequency: ${frequency_rgb}
   - platform: esp8266_pwm
     id: output_cold_white
-    max_power: 100%
-    frequency: ${frequency_cw}
     pin: GPIO5
   - platform: esp8266_pwm
     id: output_warm_white
     pin: GPIO13
-    max_power: 100%
-    frequency: ${frequency_ww}
 
 light:
-  - platform: rgb
-    name: "Parents Room Light RGB"
+  - platform: rgbww
+    name: ${friendly_name}    # Put the name that you want to see in Home Assistant.
     red: output_red
     green: output_green
     blue: output_blue
-    default_transition_length: 0.5s
-    restore_mode: RESTORE_DEFAULT_OFF
-  - platform: cwww
-    name: "Parents Room Light Tunable White"
     cold_white: output_cold_white
     warm_white: output_warm_white
-    cold_white_color_temperature: 6536 K
-    warm_white_color_temperature: 2000 K
+    cold_white_color_temperature: 6200 K
+    warm_white_color_temperature: 3100 K
     default_transition_length: 0.5s
+    constant_brightness: false
+    gamma_correct: 0

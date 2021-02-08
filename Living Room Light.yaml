@@ -1,15 +1,15 @@
 substitutions:
-  device_ssid: "Dining Room Light"
-  device_name: diningroomlight
+  device_ssid: "Living Room Light"
+  device_name: livingroomlight
   device_main_description: "RGBWW Ceiling LED light with RF remote located in Dining Room with discreet Tunable White & RGB Rear Light (shows up as separate lights)."
-  device_description: Dining Room Light - Main Light
-  friendly_name: "Dining Room Light - Tunable White"    # Put the name that you want to see in Home Assistant.
-  device_name_rgb: diningroomlightrgb
-  device_description_rgb: "Dining Room Light - RGB Rear."    # Put the name that you want to see in Home Assistant.
-  friendly_name_rgb: "Dining Room Light RGB"
+  device_description: Living Room Light - Main Light
+  friendly_name: "Living Room Light - Tunable White"    # Put the name that you want to see in Home Assistant.
+  device_name_rgb: livingroomlightrgb
+  device_description_rgb: "Living Room Light - RGB Rear."    # Put the name that you want to see in Home Assistant.
+  friendly_name_rgb: "Living Room Light RGB"
   frequency_rgb: 100 Hz
-  frequency_cw: 250 Hz
-  frequency_ww: 250 Hz
+  frequency_cw: 1000 Hz
+  frequency_ww: 1000 Hz
 
 esphome:
   name: ${device_name}
@@ -17,8 +17,8 @@ esphome:
   board: esp01_1m
 
 wifi:
-    ssid: !secret wifi_1st_ssid
-    password: !secret wifi_1st_password
+    ssid: !secret wifi_gnd_ssid
+    password: !secret wifi_gnd_password
 
     # Enable fallback hotspot (captive portal) in case wifi connection fails
     ap:
@@ -64,12 +64,14 @@ output:
     frequency: ${frequency_rgb}
   - platform: esp8266_pwm
     id: output_cold_white
+#    min_power: 0.000499
     max_power: 100%
     frequency: ${frequency_cw}
     pin: GPIO12
   - platform: esp8266_pwm
     id: output_warm_white
     pin: GPIO13
+#    min_power: 0.000499
     max_power: 100%
     frequency: ${frequency_ww}
 
@@ -384,7 +386,8 @@ light:
     warm_white: output_warm_white
     cold_white_color_temperature: 6536 K
     warm_white_color_temperature: 2000 K
-    constant_brightness: true
+    constant_brightness: false
+    gamma_correct: 0
     default_transition_length: 1s
     on_turn_on:
     - globals.set:

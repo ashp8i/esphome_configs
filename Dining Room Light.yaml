@@ -8,8 +8,8 @@ substitutions:
   device_description_rgb: "Dining Room Light - RGB Rear."    # Put the name that you want to see in Home Assistant.
   friendly_name_rgb: "Dining Room Light RGB"
   frequency_rgb: 100 Hz
-  frequency_cw: 250 Hz
-  frequency_ww: 250 Hz
+  frequency_cw: 1000 Hz
+  frequency_ww: 1000 Hz
 
 esphome:
   name: ${device_name}
@@ -45,6 +45,7 @@ ota:
 web_server:
   port: 80
 
+
 output:
   - platform: esp8266_pwm
     id: output_red
@@ -71,258 +72,272 @@ output:
     pin: GPIO13
     max_power: 100%
     frequency: ${frequency_ww}
-    
+
+globals:
+  - id: last_light_on
+    type: int
+    restore_value: no
+    initial_value: '1'
+
 remote_receiver:
   pin:
     number: GPIO2
     inverted: True
   dump: 
   - nec
-#  tolerance: 25%
+#  tolerance: 20%
 #  buffer_size: 1kB
-#  filter: 5us
-#  idle: 5ms
+#  filter: 2us
+#  idle: 4ms
 
 binary_sensor:
-#   - platform: remote_receiver
-#     name: "On Button"
-#     nec:
-#       address: 0xFF00
-#       command: 0xC03F
-#     on_press:
-#       then:
-#         - light.turn_on: "${device_name}"
-        
-#   - platform: remote_receiver
-#     name: Off Button"
-#     nec:
-#       address: 0xFF00
-#       command: 0x20DF
-#     on_press:
-#       then:
-#         - light.turn_off: "${device_name}"
+  - platform: remote_receiver
+    name: "On Button"
+    nec:
+      address: 0xFF00
+      command: 0xC03F
+    id: onbutton
+    on_press:
+      then:
+        - lambda: |-
+            if(id(last_light_on) == 1)
+            {
+            auto call = id(${device_name}).turn_on();
+            call.perform();
+            }
+            else if (id(last_light_on) == 2)
+            {
+            auto call = id(${device_name_rgb}).turn_on();
+            call.perform();
+            }
+       
+  - platform: remote_receiver
+    name: Off Button"
+    nec:
+      address: 0xFF00
+      command: 0x20DF
+    on_press:
+      then:
+        - lambda: |-
+            if(id(last_light_on) == 1)
+            {
+            auto call = id(${device_name}).turn_off();
+            call.perform();
+            }
+            else if (id(last_light_on) == 2)
+            {
+            auto call = id(${device_name_rgb}).turn_off();
+            call.perform();
+            }
 
-#   - platform: remote_receiver
-#     name: "Night Light Button"
-#     nec:
-#       address: 0xFF00
-#       command: 0x906F
-#     on_press:
-#       then:
-#         - light.turn_on: "${device_name}"
-#         - delay: 30 min
-#         - light.turn_off: "${device_name}"
+  - platform: remote_receiver
+    name: "Night Mode Button"
+    nec:
+      address: 0xFF00
+      command: 0x906F
+    on_press:
+      then:
+        - lambda: |-
+            auto call = id(${device_name_rgb}).turn_off();
+            call.perform();
+            call = id(${device_name}).turn_on();
+            call.set_color_temperature(500); // in mireds
+            call.set_brightness(0.08);
+            call.set_transition_length(1000); // in ms
+            call.perform();
+        - delay: 0.1s
 
-#   - platform: remote_receiver
-#     name: "Main Light Button"
-#     nec:
-#       address: 0xFF00
-#       command: 0x50AF
-#     on_press:
-#         then:
-# #          - if:
-# #          condition:
-# #            lambda: 'return id(some_sensor).state < 30;'
-# #          then:
-# #            - logger.log: "The sensor value is below 30!"
-# #            - light.turn_on: my_light
-# #            - delay: 5s
-# #          else:
-# #          - lambda: |-
-# #              float current_temp = id(${device_name}).current_values.get_color_temperature();
-# #              auto call = id(${device_name}).turn_on();
-# #              call.set_color_temperature(current_temp + 250);
-# #              call.set_transition_length(1000); // in ms
-# #              call.perform();
-# #
-# #          - lambda: |-
-# #              const float M0 = 0.02f;
-# #              const float M1 = 0.2f;
-# #              const float M2 = 0.5f;
-# #              const float M3 = 1.0f;
-# #              float color_temperature
-# #              auto call = id(diningroomlight).turn_on();
-# #              id(diningroomlight).current_values.get_color_temperature();( &color_temperature );
-# #              if(color_temperature < (M1-0.02))
-# #              {
-# #                ESP_LOGD("test", "M1");
-# #                color_temperature = M1;
-# #              }
-# #              else if(color_temperature < M2-0.02)
-# #              {
-# #                ESP_LOGD("test", "M2");
-# #                color_temperature = M2;
-# #              }
-# #              else if (color_temperature < M3-0.02)
-# #              {
-# #                ESP_LOGD("test", "M3");
-# #                color_temperature = M3;
-# #              }
-# #              else
-# #              {
-# #                ESP_LOGD("test", "M0");
-# #                color_temperature = M0;
-# #              }
-# #              call.set_color_temperature( color_temperature );
-# #              call.perform();
+  - platform: remote_receiver
+    name: "Main Light Button"
+    nec:
+      address: 0xFF00
+      command: 0x50AF
+    on_press:
+        then:
+        - lambda: |-
+            auto call = id(${device_name_rgb}).turn_off();
+            call.perform();
+            #define cwwwmode1 100mireds //Cool White
+            #define cwwwmode2 300mireds //Natural White
+            #define cwwwmode3 500mireds //Warm WHite
+            static int cwwwmode = 1;
+            call = id(${device_name}).turn_on();
+            call.set_transition_length(1000);
+            switch(cwwwmode)
+            {
+            case 1: call.set_color_temperature(100);
+                    break;
+            case 2: call.set_color_temperature(300);
+                    break;
+            case 3: call.set_color_temperature(500);
+                    break;
+            }
+            cwwwmode++;
+            if(cwwwmode == 4)
+            {
+              cwwwmode = 1;
+            }
+            call.perform();
+            
+  - platform: remote_receiver
+    name: "Mood Light Button"
+    nec:
+      address: 0xFF00
+      command: 0xD02F
+    on_press:
+      then:
+        - lambda: |-
+            auto call = id(${device_name}).turn_off();
+            call.perform();
+            static int effect = 1;
+            call = id(${device_name_rgb}).turn_on();
+            call.set_transition_length(500);
+            switch(effect)
+            {
+            case 1: call.set_effect("3 Colour Fade");
+                    break;
+            case 2: call.set_effect("strobe");
+                    break;
+            case 3: call.set_effect("My Custom Effect");
+                    break;
+            case 4: call.set_effect("My Custom Effect 2");
+                    break;
+            case 5: call.set_effect("None");
+                    break;
+            }
+            effect++;
+            if(effect == 6)
+            {
+              effect = 1;
+            }
+            call.perform();
+            
+  - platform: remote_receiver
+    name: "RGB Colour Toggle Button"
+    nec:
+      address: 0xFF00
+      command: 0x30CF
+    on_press:
+      then:
+        - lambda: |-
+            auto call = id(${device_name}).turn_off();
+            call.perform();
+            static int color = 1;
+            call = id(${device_name_rgb}).turn_on();
+            call.set_effect("None");
+            call.set_transition_length(500);
+            switch(color)
+            {
+            case 1: call.set_rgb(1.0, 0.0, 0.0);
+                    break;
+            case 2: call.set_rgb(1.0, 1.0, 0.0);
+                    break;
+            case 3: call.set_rgb(0.0, 1.0, 0.0);
+                    break;
+            case 4: call.set_rgb(0.0, 1.0, 1.0);
+                    break;
+            case 5: call.set_rgb(0.0, 0.0, 1.0);
+                    break;
+            case 6: call.set_rgb(1.0, 0.0, 1.0);
+                    break;
+            }
+            color++;
+            if(color == 7)
+            {
+              color = 1;
+            }
+            call.perform();
 
-#   - platform: remote_receiver
-#     name: "Mood Light Button"
-#     nec:
-#       address: 0xFF00
-#       command: 0xD02F
-#     on_press:
-#       then:
-#         - light.turn_off: "${device_name}"
-
-# #        - lambda: |-
-# #            const float L0 = 0.02f;
-# #            const float L1 = 0.2f;
-# #            const float L2 = 0.5f;
-# #            const float L3 = 1.0f;
-# #            float brightness;
-# #            auto call = id(light_main).turn_on();
-# #            id(light_main).current_values_as_brightness( &brightness );
-# #            if( brightness < (L1-0.02))
-# #            {
-# #              ESP_LOGD("test", "L1");
-# #              brightness = L1;
-# #            }
-# #            else if(brightness < L2-0.02)
-# #            {
-# #              ESP_LOGD("test", "L2");
-# #              brightness = L2;
-# #            }
-# #            else if (brightness < L3-0.02)
-# #            {
-# #              ESP_LOGD("test", "L3");
-# #              brightness = L3;
-# #            }
-# #            else
-# #            {
-# #              ESP_LOGD("test", "L0");
-# #              brightness = L0;
-# #            }
-# #            call.set_brightness( brightness );
-# #            call.perform(); 
-        
-# # slow smooth fade transition 
-# # fast pulse fade transition
-# # pulsing transtion red, blue, green only
-# # color skipping (no fade) red, yellow, green, light blue, blue, pink, white
-# # color skipping (no fade) red, yellow, green, light blue, blue, pink, white 
-
-# #  - light.turn_on:
-# #            id: ${device_name}
-# #            red: 100%
-# #            green: 0%
-# #            blue: 0%
-# #            white: 0%
-# #            effect: None
-# #
-#   - platform: remote_receiver
-#     name: "RGB Colour Toggle Button"
-#     nec:
-#       address: 0xFF00
-#       command: 0x30CF
-#     on_press:
-#       then:
-#         - light.turn_off: "${device_name}"
-# # red
-# #- light.turn_on:
-# #            id: ${device_name}
-# #            red: 100%
-# #            green: 0%
-# #            blue: 0%
-# #            white: 0%
-# #            effect: None
-# # yellow
-# #- light.turn_on:
-# #            id: ${device_name}
-# #            red: 100%
-# #            green: 0%
-# #            blue: 0%
-# #            white: 0%
-# #            effect: None
-# # green
-# #- light.turn_on:
-# #            id: ${device_name}
-# #            red: 100%
-# #            green: 0%
-# #            blue: 0%
-# #            white: 0%
-# #            effect: None
-# # light blue
-# #- light.turn_on:
-# #            id: ${device_name}
-# #            red: 100%
-# #            green: 0%
-# #            blue: 0%
-# #            white: 0%
-# #            effect: None
-# # blue
-# #- light.turn_on:
-# #            id: ${device_name}
-# #            red: 100%
-# #            green: 0%
-# #            blue: 0%
-# #            white: 0%
-# #            effect: None
-# # pink
-# #- light.turn_on:
-# #            id: ${device_name}
-# #            red: 100%
-# #            green: 0%
-# #            blue: 0%
-# #            white: 0%
-# #            effect: None
-
-#   - platform: remote_receiver
-#     name: "Warm Light Button"
-#     nec:
-#       address: 0xFF00
-#       command: 0x10EF
-#     on_press:
-#         then:
-#           - lambda: |-
-#               float current_temp = id(${device_name}).current_values.get_color_temperature();
-              
-#               auto call = id(${device_name}).turn_on();
-#               call.set_color_temperature(current_temp + 150);
-#               call.set_transition_length(2000); // in ms
-#               call.perform();
+  - platform: remote_receiver
+    name: "Warm Light Button"
+    nec:
+      address: 0xFF00
+      command: 0x10EF
+    id: warmbutton
+    on_press:
+      then:
+        - lambda: |-
+            if(id(last_light_on) == 1)
+            {
+            float current_temp = id(${device_name}).current_values.get_color_temperature();
+            auto call = id(${device_name}).turn_on();
+            call.set_color_temperature(current_temp + 100);
+            call.set_transition_length(1000); // in ms
+            call.perform();
+            }
+            else if (id(last_light_on) == 2)
+            {
+            float current_temp = id(${device_name_rgb}).current_values.get_color_temperature();
+            auto call = id(${device_name_rgb}).turn_on();
+            call.set_color_temperature(current_temp + 100);
+            call.set_transition_length(1000); // in ms
+            call.perform();
+            }
+        - delay: 0.01s
 
   - platform: remote_receiver
     name: "Cold Light Button"
     nec:
       address: 0xFF00
       command: 0xE01F
+    id: coldbutton
     on_press:
-        then:
-          - lambda: |-
-              float current_temp = id(${device_name}).current_values.get_color_temperature();
-              
-              auto call = id(${device_name}).turn_on();
-              call.set_color_temperature(current_temp - 150);
-              call.set_transition_length(2000); // in ms
-              call.perform();
+      then:
+        - lambda: |-
+            if(id(last_light_on) == 1)
+            {
+            float current_temp = id(${device_name}).current_values.get_color_temperature();
+            auto call = id(${device_name}).turn_on();
+            call.set_color_temperature(current_temp - 100);
+            call.set_transition_length(1000); // in ms
+            call.perform();
+            }
+            else if (id(last_light_on) == 2)
+            {
+            float current_temp = id(${device_name_rgb}).current_values.get_color_temperature();
+            auto call = id(${device_name_rgb}).turn_on();
+            call.set_color_temperature(current_temp - 100);
+            call.set_transition_length(1000); // in ms
+            call.perform();
+            }
+        - delay: 0.01s
 
-- platform: remote_receiver
+  - platform: remote_receiver
     name: "Bright+ Button"
     nec:
       address: 0xFF00
       command: 0xA05F
     id: brightbutton
     on_press:
-      - while:
-          condition:
-            binary_sensor.is_on: brightbutton
-          then:
-            - light.dim_relative:
-                id: diningroomlight
-                relative_brightness: 5%
-                transition_length: 0.1s
-            - delay: 0.1s
+      then:
+        - lambda: |-
+            if(id(last_light_on) == 1)
+            {
+            float brightness;
+            auto call = id(${device_name}).turn_on();
+            id(${device_name}).remote_values.as_brightness( &brightness );
+            brightness += 0.1f;
+            if( brightness > 1.0f )
+            {
+              brightness = 1.0f;
+            }
+            call.set_brightness( brightness );
+            call.perform();
+            }
+            else if (id(last_light_on) == 2)
+            {
+            float brightness;
+            auto call = id(${device_name_rgb}).turn_on();
+            id(${device_name_rgb}).remote_values.as_brightness( &brightness );
+            brightness += 0.1f;
+            if( brightness > 1.0f )
+            {
+              brightness = 1.0f;
+            }
+            call.set_brightness( brightness );
+            call.perform();
+            }
+        - delay: 0.01s
 
   - platform: remote_receiver
     name: "Dim- Button"
@@ -331,15 +346,35 @@ binary_sensor:
       command: 0x609F
     id: dimbutton
     on_press:
-      - while:
-          condition:
-            binary_sensor.is_on: dimbutton
-          then:
-            - light.dim_relative:
-                id: diningroomlight
-                relative_brightness: -5%
-                transition_length: 0.1s
-            - delay: 0.1s
+      then:
+        - lambda: |-
+            if(id(last_light_on) == 1)
+            {
+            float brightness;
+            auto call = id(${device_name}).turn_on();
+            id(${device_name}).remote_values.as_brightness( &brightness );
+            brightness -= 0.1f;
+            if( brightness < 0.0f )
+            {
+              brightness = 0.0f;
+            }
+            call.set_brightness( brightness );
+            call.perform();
+            }
+            else if (id(last_light_on) == 2)
+            {
+            float brightness;
+            auto call = id(${device_name_rgb}).turn_on();
+            id(${device_name_rgb}).remote_values.as_brightness( &brightness );
+            brightness -= 0.1f;
+            if( brightness < 0.0f )
+            {
+              brightness = 0.0f;
+            }
+            call.set_brightness( brightness );
+            call.perform();
+            }
+        - delay: 0.01s
 
 light:
   - platform: cwww
@@ -349,7 +384,13 @@ light:
     warm_white: output_warm_white
     cold_white_color_temperature: 6536 K
     warm_white_color_temperature: 2000 K
-    default_transition_length: 0.5s
+    constant_brightness: false
+    gamma_correct: 0
+    default_transition_length: 1s
+    on_turn_on:
+    - globals.set:
+        id: last_light_on
+        value: '1'
   - platform: rgb
     name: ${friendly_name_rgb}
     id: ${device_name_rgb}
@@ -358,106 +399,432 @@ light:
     blue: output_blue
     default_transition_length: 0.5s
     restore_mode: RESTORE_DEFAULT_OFF
-    # effects:             # Add few effects : Slow and fast random colors and an "in alarm" mode.
-    #   - random:
-    #       name: "Slow Random Colors"
-    #       transition_length: 30s
-    #       update_interval: 30s
-    #   - random:
-    #       name: "Fast Random Colors"
-    #       transition_length: 4s
-    #       update_interval: 5s
-    #   - strobe:
-    #       name: Default Strobe
-    #   - flicker:
-    #       alpha: 50% #The percentage that the last color value should affect the light. More or less the “forget-factor” of an exponential moving average. Defaults to 95%.
-    #       intensity: 50% #The intensity of the flickering, basically the maximum amplitude of the random offsets. Defaults to 1.5%.
-    #   - lambda:
-    #       name: Color Cycle
-    #       update_interval: 11s
-    #       lambda: |-
-    #         static int state = 0;
-    #         auto call = id(diningroomlightrgb).turn_on();
-    #         call.set_transition_length(10000);
-    #         if (state == 0) {
-    #           call.set_rgb(1.0, 0.0, 0.0); // red
-    #         } else if (state == 1) {
-    #           call.set_rgb(1.0, 0.5, 0.0); // orange
-    #         } else if (state == 2) {
-    #           call.set_rgb(1.0, 0.86, 0.0); // yellow
-    #         } else if (state == 3) {
-    #           call.set_rgb(0.75, 1.0, 0.0); // chartreuse
-    #         } else if (state == 4) {
-    #           call.set_rgb(0.0, 1.0, 0.0); // green
-    #         } else if (state == 5) {
-    #           call.set_rgb(0.0, 1.0, 0.5); // spring green
-    #         } else if (state == 6) {
-    #           call.set_rgb(0.0, 1.0, 1.0); // cyan
-    #         } else if (state == 7) {
-    #           call.set_rgb(0.0, 0.5, 1.0); // azure
-    #         } else if (state == 8) {
-    #           call.set_rgb(0.0, 0.0, 1.0); // blue
-    #         } else if (state == 9) {
-    #           call.set_rgb(0.5, 0.0, 1.0); // violet
-    #         } else if (state == 10) {
-    #           call.set_rgb(1.0, 0.0, 1.0); // magenta
-    #         } else if (state == 11) {
-    #           call.set_rgb(1.0, 0.0, 0.5); // rose
-    #         }
-    #         call.perform();
-    #         state++;
-    #         if (state == 12)
-    #           state = 0;
-    #   - strobe:
-    #       name: In Alarm
-    #       colors:
-    #         - state: True
-    #           brightness: 100%
-    #           red: 100%
-    #           blue: 0%
-    #           green: 0%
-    #           duration: 150ms
-    #         - state: False
-    #           duration: 100ms
-    #         - state: True
-    #           brightness: 100%
-    #           red: 100%
-    #           blue: 0%
-    #           green: 0%
-    #           duration: 150ms
-    #         - state: False
-    #           duration: 100ms
-    #         - state: True
-    #           brightness: 100%
-    #           red: 0%
-    #           blue: 100%
-    #           green: 0%
-    #           duration: 150ms
-    #         - state: False
-    #           duration: 100ms
-    #         - state: True
-    #           brightness: 100%
-    #           red: 0%
-    #           blue: 100%
-    #           green: 0%
-    #           duration: 150ms
-    #         - state: False
-    #           duration: 100ms
-      
-    #   - lambda:
-    #       name: Throb
-    #       update_interval: 1s
-    #       lambda: |-
-    #         static int state = 0;
-    #         auto call = id(diningroomlightrgb).turn_on();
-    #         // Transtion of 1000ms = 1s
-    #         call.set_transition_length(1000);
-    #         if (state == 0) {
-    #           call.set_brightness(1.0);
-    #         } else {
-    #           call.set_brightness(0.01);
-    #         }
-    #         call.perform();
-    #         state += 1;
-    #         if (state == 2)
-    #           state = 0;
+    on_turn_on:
+    - globals.set:
+        id: last_light_on
+        value: '2'
+    effects:
+      - lambda:
+          name: 3 Colour Fade
+          update_interval: 0.25s
+          lambda: |-
+            static int state = 0;
+            static int color_fade = 1;
+            auto call = id(${device_name_rgb}).turn_on(); //put the id for your light in here
+            call.set_transition_length(100);
+            if (state == 0) 
+            {
+            call.set_brightness(0.09);
+            
+            }
+            else if (state == 1)
+            {
+              switch(color_fade)
+              {
+                case 1: call.set_rgb(1.0, 0.0, 0.0);
+                        break;
+                case 2: call.set_rgb(0.0, 1.0, 0.0);
+                        break;
+                case 3: call.set_rgb(0.0, 0.0, 1.0);
+                        break;
+              }
+              call.set_brightness(1.0);
+            }
+            state ++;
+            if (state == 2){
+            state = 0;
+            }
+            color_fade++;
+            if(color_fade == 4)
+            {
+              color_fade = 1;
+            }
+            call.perform();
+      - random:
+          name: smooth
+          transition_length: 4s
+          update_interval: 5s
+      - strobe:
+          name: strobe
+          colors:
+            - state: True
+              brightness: 80%
+              red: 100%
+              green: 90%
+              blue: 0%
+              white: 0%
+              duration: 500ms
+            - state: False
+              duration: 250ms
+            - state: True
+              brightness: 80%
+              red: 0%
+              green: 100%
+              blue: 0%
+              white: 0%
+              duration: 500ms
+            - state: False
+              duration: 250ms
+            - state: True
+              brightness: 80%
+              red: 0%
+              green: 100%
+              blue: 60%  
+              white: 0%
+              duration: 500ms
+      - flicker:
+          name: flash
+          alpha: 95%
+          intensity: 1.5%
+      - lambda:
+          name: fade
+          update_interval: 1s
+          lambda: |-
+            static int state = 0;
+            auto call = id(${device_name_rgb}).turn_on();
+            // Transtion of 1000ms = 1s
+            call.set_transition_length(1000);
+            if (state == 0) {
+              call.set_rgb(1.0, 1.0, 1.0);
+            } else if (state == 1) {
+              call.set_rgb(1.0, 0.0, 1.0);
+            } else if (state == 2) {
+              call.set_rgb(0.0, 0.0, 1.0);
+            } else {
+              call.set_rgb(1.0, 0.0, 0.0);
+            }
+            call.perform();
+            state += 1;
+            if (state == 4)
+              state = 0;
+      - lambda:
+          name: My Custom Effect
+          update_interval: 1s
+          lambda: |-
+            static int state = 0;
+            auto call = id(${device_name_rgb}).turn_on();
+            // Transtion of 1000ms = 1s
+            call.set_transition_length(1000);
+            if (state == 0) {
+              call.set_rgb(1.0, 1.0, 1.0);
+            } else if (state == 1) {
+              call.set_rgb(1.0, 0.0, 1.0);
+            } else if (state == 2) {
+              call.set_rgb(0.0, 0.0, 1.0);
+            } else {
+              call.set_rgb(1.0, 0.0, 0.0);
+            }
+            call.perform();
+            state += 1;
+            if (state == 4)
+              state = 0;
+      - lambda:
+          name: My Custom Effect 2
+          update_interval: 1s
+          lambda: |-
+            static int state = 0;
+            auto call = id(${device_name_rgb}).turn_on();
+            // Transtion of 1000ms = 1s
+            call.set_transition_length(1000);
+            if (state == 0) {
+              call.set_rgb(1.0, 1.0, 1.0);
+            } else if (state == 1) {
+              call.set_rgb(0.5, 0.0, 1.0);
+            } else if (state == 2) {
+              call.set_rgb(0.0, 0.5, 1.0);
+            } else {
+              call.set_rgb(1.0, 0.0, 0.0);
+            }
+            call.perform();
+            state += 1;
+            if (state == 4)
+              state = 0;
+      - lambda:
+          name: randomflicker
+          update_interval: 200 ms
+          lambda: |-
+            auto call = id(${device_name_rgb}).turn_on();
+            float r = random_float() * 2.0f - 1.0f; 
+            r =  r * r * r;
+            call.set_transition_length(r);
+            //static double br=id(global_brightness);
+            call.set_brightness(0.7 + r/10);
+            call.set_publish(false);
+            call.set_save(false);
+            call.perform();
+      - lambda:
+          name: Chill Mode
+          update_interval: 70s
+          lambda: |-
+            auto call = id(${device_name_rgb}).turn_on();
+            call.set_transition_length(55000);
+            call.set_white(0.0);
+            light::ESPColor c = light::ESPColor::random_color();
+            call.set_rgb((c.red%255)/255.0, (c.green%255)/255.0, (c.blue%255)/255.0);
+            call.set_publish(false);
+            call.set_save(false);
+            call.perform();
+      - lambda:
+          name: Chill Mode (Vibrant)
+          update_interval: 120s
+          lambda: |-
+            auto call = id(${device_name_rgb}).turn_on();
+            call.set_transition_length(800);
+            call.set_white(0.0);
+            light::ESPColor c = light::ESPColor::random_color();
+            call.set_rgb((c.red%128)/255.0, (c.green%128)/255.0, (c.blue%128)/255.0);
+            call.set_publish(false);
+            call.set_save(false);
+            call.perform();
+      - lambda:
+          name: Disco
+          update_interval: 500ms
+          lambda: |-
+            auto call = id(${device_name_rgb}).turn_on();
+            //call.set_transition_length(rand() % 400 + 1);
+            call.set_transition_length(500);
+            call.set_white(0.0);
+            light::ESPColor c = light::ESPColor::random_color();
+            call.set_rgb((c.red)/255.0, (c.green)/255.0, (c.blue)/255.0);
+            call.set_publish(false);
+            call.set_save(false);
+            call.perform();
+      - lambda:
+          name: WTF
+          update_interval: 200ms
+          lambda: |-
+            auto call = id(${device_name_rgb}).turn_on();
+            call.set_transition_length(200);
+            call.set_white(0.0);
+            call.set_brightness((rand() % 255 + 1) / 255.0);
+            call.set_color_temperature(rand() % 2 == 0 ? 0: 512);
+            call.perform();
+      - strobe:
+          name: Lightning
+          colors:
+            - state: True
+              brightness: 100%
+              red: 90%
+              green: 90%
+              blue: 100%
+              white: 0%
+              duration: 50ms
+            - state: False
+              duration: 50ms
+            - state: True
+              brightness: 100%
+              red: 90%
+              green: 90%
+              blue: 100%
+              white: 0%
+              duration: 160ms
+            - state: False
+              duration: 50ms
+            - state: True
+              brightness: 100%
+              red: 90%
+              green: 90%
+              blue: 100%
+              white: 0%
+              duration: 50ms
+            - state: False
+              duration: 3000ms
+      - random:
+          name: "Slow Random Colors"
+          transition_length: 30s
+          update_interval: 30s
+      - random:
+          name: "Fast Random Colors"
+          transition_length: 4s
+          update_interval: 5s
+      - strobe:
+          name: In Alarm
+          colors:
+            - state: True
+              red: 100%
+              blue: 0%
+              green: 0%
+              white: 0%
+              duration: 150ms
+            - state: False
+              duration: 100ms
+            - state: True
+              red: 100%
+              blue: 0%
+              green: 0%
+              white: 0%  
+              duration: 150ms
+            - state: False
+              duration: 100ms
+            - state: True
+              red: 0%
+              blue: 100%
+              green: 0%
+              white: 0%
+              duration: 150ms
+            - state: False
+              duration: 100ms
+            - state: True
+              red: 0%
+              blue: 100%
+              green: 0%
+              white: 0%
+              duration: 150ms
+            - state: False
+              duration: 100ms
+      - strobe:
+          name: Strobe Effect
+          colors:
+            - state: True
+              red: 100%
+              green: 90%
+              blue: 0%
+              white: 0%
+              duration: 50ms
+            - state: False
+              duration: 25ms
+            - state: True
+              red: 0%
+              green: 100%
+              blue: 0%
+              white: 0%
+              duration: 50ms
+      - lambda:
+          name: Breathing
+          update_interval: 16s
+          lambda: |-
+            static int state = 0;
+            static int color = 1;
+            auto call = id(${device_name_rgb}).turn_on(); //the id of your light
+            call.set_transition_length(15000);
+            if (state == 0) 
+            {
+            call.set_brightness(1.0);
+            }
+            else if (state == 1)
+            {
+            call.set_brightness(0.01);
+            }
+            call.perform();
+            state ++;
+            if (state == 2){
+            state = 0;
+            }
+      - lambda:
+          name: RGB Breathing
+          update_interval: 16s
+          lambda: |-
+            #define Color1 1.0, 0.0, 0.0 //These are the colors defined, feel free to change or extend the list
+            #define Color2 1.0, 0.5, 0.0 //if you extend the list, dont forget to add them in the switch loop below
+            #define Color3 1.0, 1.0, 0.0 //and remember to adjust the reset counter at the bottom
+            #define Color4 0.5, 1.0, 0.0
+            #define Color5 0.0, 1.0, 0.0
+            #define Color6 0.0, 1.0, 0.5
+            #define Color7 0.0, 1.0, 1.0
+            #define Color8 0.0, 0.5, 1.0
+            #define Color9 0.0, 0.0, 1.0
+            #define Color10 0.5, 0.0, 1.0
+            #define Color11 0.5, 0.0, 1.0
+            #define Color12 1.0, 0.0, 0.5
+            static int state = 0;
+            static int color = 1;
+            auto call = id(${device_name_rgb}).turn_on(); //put the id for your light in here
+            call.set_transition_length(15000);
+            if (state == 0) 
+            {
+            call.set_brightness(0.01);
+            
+            }
+            else if (state == 1)
+            {
+              switch(color)
+              {
+                case 1: call.set_rgb(Color1);
+                        break;
+                case 2: call.set_rgb(Color2);
+                        break;
+                case 3: call.set_rgb(Color3);
+                        break;
+                case 4: call.set_rgb(Color4);
+                        break;
+                case 5: call.set_rgb(Color5);
+                        break;
+                case 6: call.set_rgb(Color6);
+                        break;
+                case 7: call.set_rgb(Color7);
+                        break;
+                case 8: call.set_rgb(Color8);
+                        break;
+                case 9: call.set_rgb(Color9);
+                        break;
+                case 10: call.set_rgb(Color10);
+                          break;
+                case 11: call.set_rgb(Color11);
+                          break;
+                case 12: call.set_rgb(Color12);
+                          break;
+              }
+              call.set_brightness(1.0);
+            }
+            
+            state ++;
+            if (state == 2){
+            state = 0;
+            }
+            color++;
+            if(color == 7)
+            {
+              color = 1;
+            }
+            call.perform();
+      - random:          
+          name: "Slow Random Effect"
+          transition_length: 20s
+          update_interval: 20s
+      - random:
+          name: "Fast Random Effect"
+          transition_length: 4s
+          update_interval: 5s
+      - random:
+          name: "Insane Random Effect"
+          transition_length: 1s
+          update_interval: 1s
+      - random:          
+          name: "Totally Loco Random Effect"
+          transition_length: 300ms
+          update_interval: 250ms
+      - lambda:
+          name: "Random colour fade"
+          update_interval: 3s
+          lambda: |-
+            auto call = id(${device_name_rgb}).turn_on();    
+            call.set_red_if_supported(random_float());
+            call.set_green_if_supported(random_float());
+            call.set_blue_if_supported(random_float());
+            call.set_white_if_supported(0.0);
+            call.set_transition_length_if_supported(2000);
+            call.set_publish(true);
+      - lambda:
+          name: "Red Green Blue Fade"
+          update_interval: 4s
+          lambda: |-
+            static int state = 0;
+            auto call = id(${device_name_rgb}).turn_on();                                                                           
+            call.set_transition_length(3000);                                                                      
+            if (state == 0) {                                                                             
+              call.set_rgb(1.0, 0.0, 0.0);
+            } else if (state == 1) {                                                                          
+              call.set_rgb(0.0, 1.0, 0.0);
+            } else if (state == 2) {                               
+              call.set_rgb(0.0, 0.0, 1.0);
+            } else {                                                       
+              call.set_rgb(1.0, 0.0, 0.0);
+            }                             
+            call.set_white(0.0);
+            call.perform();                                                                        
+            state += 1;                                                                                           
+            if (state == 3)
+              state = 0;
+                  
+## TODO's remote_receiver colour change for rgb light (feature request  #429 esphome needs to support hsv first)
+## Match Original MagicHome Effects

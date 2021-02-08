@@ -1,13 +1,14 @@
 substitutions:
-  device_ssid: "Ashish Room Lamp"
-  device_name: ashishroomlamp
-  device_main_description: "BKL1253 - B.K. Licht 9W 806lm RGBCCT Bulb."
-  device_description: Ashish Room Lamp
-  friendly_name: "Ashish Room Lamp"    # Put the name that you want to see in Home Assistant.
+  device_ssid: "Living Room Light"
+  device_name: bathroomlight
+  device_main_description: "RGBWW Ceiling LED light with RF remote located in Dining Room with discreet Tunable White & RGB Rear Light (shows up as separate lights)."
+  device_description: Bathroom Light
+  friendly_name: "Living Room Light - Tunable White"    # Put the name that you want to see in Home Assistant.
 esphome:
   name: ${device_name}
-  platform: ESP8266
-  board: esp01_1m
+  platform: ESP32
+  board: featheresp32
+#  board: nodemcu-32s
 
 wifi:
     ssid: !secret wifi_1st_ssid
@@ -40,32 +41,23 @@ web_server:
 
 
 output:
-  - platform: esp8266_pwm
-    id: output_red
-    pin: GPIO5
-  - platform: esp8266_pwm
-    id: output_green
-    pin: GPIO4
-  - platform: esp8266_pwm
-    id: output_blue
-    pin: GPIO13
-  - platform: esp8266_pwm
+  - platform: ledc
     id: output_cold_white
-    pin: GPIO14
-  - platform: esp8266_pwm
+    max_power: 100%
+    pin: GPIO5
+  - platform: ledc
     id: output_warm_white
     pin: GPIO12
+    max_power: 100%
 
 light:
-  - platform: rgbww
+  - platform: cwww
     name: ${friendly_name}    # Put the name that you want to see in Home Assistant.
-    red: output_red
-    green: output_green
-    blue: output_blue
+    id: ${device_name}    # id used in esphome.
     cold_white: output_cold_white
     warm_white: output_warm_white
-    cold_white_color_temperature: 6200 K
-    warm_white_color_temperature: 3100 K
-    default_transition_length: 0.5s
+    cold_white_color_temperature: 6536 K
+    warm_white_color_temperature: 2000 K
     constant_brightness: false
     gamma_correct: 0
+    default_transition_length: 1s
