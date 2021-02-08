@@ -1,0 +1,465 @@
+substitutions:
+  device_ssid: "Dining Room Light"
+  device_name: diningroomlight
+  device_main_description: "RGBWW Ceiling LED light with RF remote located in Dining Room with discreet Tunable White & RGB Rear Light (shows up as separate lights)."
+  device_description: Dining Room Light - Main Light
+  friendly_name: "Dining Room Light - Tunable White"    # Put the name that you want to see in Home Assistant.
+  device_name_rgb: diningroomlightrgb
+  device_description_rgb: "Dining Room Light - RGB Rear."    # Put the name that you want to see in Home Assistant.
+  friendly_name_rgb: "Dining Room Light RGB"
+  frequency_rgb: 100 Hz
+  frequency_cw: 250 Hz
+  frequency_ww: 250 Hz
+
+esphome:
+  name: ${device_name}
+  platform: ESP8266
+  board: esp01_1m
+
+wifi:
+    ssid: !secret wifi_1st_ssid
+    password: !secret wifi_1st_password
+
+    # Enable fallback hotspot (captive portal) in case wifi connection fails
+    ap:
+      ssid: ${device_ssid}
+      password: !secret ap_password
+
+captive_portal:
+
+# Enable logging
+# Example configuration entry
+debug:
+
+# Logger must be at least debug (default)
+logger:
+  level: debug
+
+# Enable Home Assistant API
+api:
+  password: !secret api_password
+
+ota:
+  password: !secret ota_password
+
+web_server:
+  port: 80
+
+
+output:
+  - platform: esp8266_pwm
+    id: output_red
+    pin: GPIO5
+    max_power: 100%
+    frequency: ${frequency_rgb}
+  - platform: esp8266_pwm
+    id: output_green
+    pin: GPIO4
+    max_power: 100%
+    frequency: ${frequency_rgb}
+  - platform: esp8266_pwm
+    id: output_blue
+    pin: GPIO14
+    max_power: 100%
+    frequency: ${frequency_rgb}
+  - platform: esp8266_pwm
+    id: output_cold_white
+    max_power: 100%
+    frequency: ${frequency_cw}
+    pin: GPIO12
+  - platform: esp8266_pwm
+    id: output_warm_white
+    pin: GPIO13
+    max_power: 100%
+    frequency: ${frequency_ww}
+    
+remote_receiver:
+  pin:
+    number: GPIO2
+    inverted: True
+  dump: 
+  - nec
+#  tolerance: 25%
+#  buffer_size: 1kB
+#  filter: 5us
+#  idle: 5ms
+
+binary_sensor:
+#   - platform: remote_receiver
+#     name: "On Button"
+#     nec:
+#       address: 0xFF00
+#       command: 0xC03F
+#     on_press:
+#       then:
+#         - light.turn_on: "${device_name}"
+#        
+#   - platform: remote_receiver
+#     name: Off Button"
+#     nec:
+#       address: 0xFF00
+#       command: 0x20DF
+#     on_press:
+#       then:
+#         - light.turn_off: "${device_name}"
+#
+#   - platform: remote_receiver
+#     name: "Night Light Button"
+#     nec:
+#       address: 0xFF00
+#       command: 0x906F
+#     on_press:
+#       then:
+#         - light.turn_on: "${device_name}"
+#         - delay: 30 min
+#         - light.turn_off: "${device_name}"
+#
+#   - platform: remote_receiver
+#     name: "Main Light Button"
+#     nec:
+#       address: 0xFF00
+#       command: 0x50AF
+#     on_press:
+#         then:
+# #          - if:
+# #          condition:
+# #            lambda: 'return id(some_sensor).state < 30;'
+# #          then:
+# #            - logger.log: "The sensor value is below 30!"
+# #            - light.turn_on: my_light
+# #            - delay: 5s
+# #          else:
+# #          - lambda: |-
+# #              float current_temp = id(${device_name}).current_values.get_color_temperature();
+# #              auto call = id(${device_name}).turn_on();
+# #              call.set_color_temperature(current_temp + 250);
+# #              call.set_transition_length(1000); // in ms
+# #              call.perform();
+# #
+# #          - lambda: |-
+# #              const float M0 = 0.02f;
+# #              const float M1 = 0.2f;
+# #              const float M2 = 0.5f;
+# #              const float M3 = 1.0f;
+# #              float color_temperature
+# #              auto call = id(diningroomlight).turn_on();
+# #              id(diningroomlight).current_values.get_color_temperature();( &color_temperature );
+# #              if(color_temperature < (M1-0.02))
+# #              {
+# #                ESP_LOGD("test", "M1");
+# #                color_temperature = M1;
+# #              }
+# #              else if(color_temperature < M2-0.02)
+# #              {
+# #                ESP_LOGD("test", "M2");
+# #                color_temperature = M2;
+# #              }
+# #              else if (color_temperature < M3-0.02)
+# #              {
+# #                ESP_LOGD("test", "M3");
+# #                color_temperature = M3;
+# #              }
+# #              else
+# #              {
+# #                ESP_LOGD("test", "M0");
+# #                color_temperature = M0;
+# #              }
+# #              call.set_color_temperature( color_temperature );
+# #              call.perform();
+#
+#   - platform: remote_receiver
+#     name: "Mood Light Button"
+#     nec:
+#       address: 0xFF00
+#       command: 0xD02F
+#     on_press:
+#       then:
+#         - light.turn_off: "${device_name}"
+#
+# #        - lambda: |-
+# #            const float L0 = 0.02f;
+# #            const float L1 = 0.2f;
+# #            const float L2 = 0.5f;
+# #            const float L3 = 1.0f;
+# #            float brightness;
+# #            auto call = id(light_main).turn_on();
+# #            id(light_main).current_values_as_brightness( &brightness );
+# #            if( brightness < (L1-0.02))
+# #            {
+# #              ESP_LOGD("test", "L1");
+# #              brightness = L1;
+# #            }
+# #            else if(brightness < L2-0.02)
+# #            {
+# #              ESP_LOGD("test", "L2");
+# #              brightness = L2;
+# #            }
+# #            else if (brightness < L3-0.02)
+# #            {
+# #              ESP_LOGD("test", "L3");
+# #              brightness = L3;
+# #            }
+# #            else
+# #            {
+# #              ESP_LOGD("test", "L0");
+# #              brightness = L0;
+# #            }
+# #            call.set_brightness( brightness );
+# #            call.perform(); 
+#        
+# # slow smooth fade transition 
+# # fast pulse fade transition
+# # pulsing transtion red, blue, green only
+# # color skipping (no fade) red, yellow, green, light blue, blue, pink, white
+# # color skipping (no fade) red, yellow, green, light blue, blue, pink, white 
+#
+# #  - light.turn_on:
+# #            id: ${device_name}
+# #            red: 100%
+# #            green: 0%
+# #            blue: 0%
+# #            white: 0%
+# #            effect: None
+# #
+#   - platform: remote_receiver
+#     name: "RGB Colour Toggle Button"
+#     nec:
+#       address: 0xFF00
+#       command: 0x30CF
+#     on_press:
+#       then:
+#         - light.turn_off: "${device_name}"
+# # red
+# #- light.turn_on:
+# #            id: ${device_name}
+# #            red: 100%
+# #            green: 0%
+# #            blue: 0%
+# #            white: 0%
+# #            effect: None
+# # yellow
+# #- light.turn_on:
+# #            id: ${device_name}
+# #            red: 100%
+# #            green: 0%
+# #            blue: 0%
+# #            white: 0%
+# #            effect: None
+# # green
+# #- light.turn_on:
+# #            id: ${device_name}
+# #            red: 100%
+# #            green: 0%
+# #            blue: 0%
+# #            white: 0%
+# #            effect: None
+# # light blue
+# #- light.turn_on:
+# #            id: ${device_name}
+# #            red: 100%
+# #            green: 0%
+# #            blue: 0%
+# #            white: 0%
+# #            effect: None
+# # blue
+# #- light.turn_on:
+# #            id: ${device_name}
+# #            red: 100%
+# #            green: 0%
+# #            blue: 0%
+# #            white: 0%
+# #            effect: None
+# # pink
+# #- light.turn_on:
+# #            id: ${device_name}
+# #            red: 100%
+# #            green: 0%
+# #            blue: 0%
+# #            white: 0%
+# #            effect: None
+#
+#   - platform: remote_receiver
+#     name: "Warm Light Button"
+#     nec:
+#       address: 0xFF00
+#       command: 0x10EF
+#     on_press:
+#         then:
+#           - lambda: |-
+#               float current_temp = id(${device_name}).current_values.get_color_temperature();
+#              
+#               auto call = id(${device_name}).turn_on();
+#               call.set_color_temperature(current_temp + 150);
+#               call.set_transition_length(2000); // in ms
+#               call.perform();
+#
+#  - platform: remote_receiver
+#    name: "Cold Light Button"
+#    nec:
+#      address: 0xFF00
+#      command: 0xE01F
+#    on_press:
+#        then:
+#          - lambda: |-
+#              float current_temp = id(${device_name}).current_values.get_color_temperature();
+#              
+#              auto call = id(${device_name}).turn_on();
+#              call.set_color_temperature(current_temp - 150);
+#              call.set_transition_length(2000); // in ms
+#              call.perform();
+#
+- platform: remote_receiver
+    name: "Bright+ Button"
+    nec:
+      address: 0xFF00
+      command: 0xA05F
+    id: brightbutton
+    on_press:
+      - while:
+          condition:
+            binary_sensor.is_on: brightbutton
+          then:
+            - light.dim_relative:
+                id: diningroomlight
+                relative_brightness: 5%
+                transition_length: 0.1s
+            - delay: 0.1s
+
+
+  - platform: remote_receiver
+    name: "Dim- Button"
+    nec:
+      address: 0xFF00
+      command: 0x609F
+    id: dimbutton
+    on_press:
+      - while:
+          condition:
+            binary_sensor.is_on: dimbutton
+          then:
+            - light.dim_relative:
+                id: diningroomlight
+                relative_brightness: -5%
+                transition_length: 0.1s
+            - delay: 0.1s
+
+light:
+  - platform: cwww
+    name: ${friendly_name}    # Put the name that you want to see in Home Assistant.
+    id: ${device_name}    # id used in esphome.
+    cold_white: output_cold_white
+    warm_white: output_warm_white
+    cold_white_color_temperature: 6536 K
+    warm_white_color_temperature: 2000 K
+    default_transition_length: 0.5s
+  - platform: rgb
+    name: ${friendly_name_rgb}
+    id: ${device_name_rgb}
+    red: output_red
+    green: output_green
+    blue: output_blue
+    default_transition_length: 0.5s
+    restore_mode: RESTORE_DEFAULT_OFF
+    # effects:             # Add few effects : Slow and fast random colors and an "in alarm" mode.
+    #   - random:
+    #       name: "Slow Random Colors"
+    #       transition_length: 30s
+    #       update_interval: 30s
+    #   - random:
+    #       name: "Fast Random Colors"
+    #       transition_length: 4s
+    #       update_interval: 5s
+    #   - strobe:
+    #       name: Default Strobe
+    #   - flicker:
+    #       alpha: 50% #The percentage that the last color value should affect the light. More or less the “forget-factor” of an exponential moving average. Defaults to 95%.
+    #       intensity: 50% #The intensity of the flickering, basically the maximum amplitude of the random offsets. Defaults to 1.5%.
+    #   - lambda:
+    #       name: Color Cycle
+    #       update_interval: 11s
+    #       lambda: |-
+    #         static int state = 0;
+    #         auto call = id(diningroomlightrgb).turn_on();
+    #         call.set_transition_length(10000);
+    #         if (state == 0) {
+    #           call.set_rgb(1.0, 0.0, 0.0); // red
+    #         } else if (state == 1) {
+    #           call.set_rgb(1.0, 0.5, 0.0); // orange
+    #         } else if (state == 2) {
+    #           call.set_rgb(1.0, 0.86, 0.0); // yellow
+    #         } else if (state == 3) {
+    #           call.set_rgb(0.75, 1.0, 0.0); // chartreuse
+    #         } else if (state == 4) {
+    #           call.set_rgb(0.0, 1.0, 0.0); // green
+    #         } else if (state == 5) {
+    #           call.set_rgb(0.0, 1.0, 0.5); // spring green
+    #         } else if (state == 6) {
+    #           call.set_rgb(0.0, 1.0, 1.0); // cyan
+    #         } else if (state == 7) {
+    #           call.set_rgb(0.0, 0.5, 1.0); // azure
+    #         } else if (state == 8) {
+    #           call.set_rgb(0.0, 0.0, 1.0); // blue
+    #         } else if (state == 9) {
+    #           call.set_rgb(0.5, 0.0, 1.0); // violet
+    #         } else if (state == 10) {
+    #           call.set_rgb(1.0, 0.0, 1.0); // magenta
+    #         } else if (state == 11) {
+    #           call.set_rgb(1.0, 0.0, 0.5); // rose
+    #         }
+    #         call.perform();
+    #         state++;
+    #         if (state == 12)
+    #           state = 0;
+    #   - strobe:
+    #       name: In Alarm
+    #       colors:
+    #         - state: True
+    #           brightness: 100%
+    #           red: 100%
+    #           blue: 0%
+    #           green: 0%
+    #           duration: 150ms
+    #         - state: False
+    #           duration: 100ms
+    #         - state: True
+    #           brightness: 100%
+    #           red: 100%
+    #           blue: 0%
+    #           green: 0%
+    #           duration: 150ms
+    #         - state: False
+    #           duration: 100ms
+    #         - state: True
+    #           brightness: 100%
+    #           red: 0%
+    #           blue: 100%
+    #           green: 0%
+    #           duration: 150ms
+    #         - state: False
+    #           duration: 100ms
+    #         - state: True
+    #           brightness: 100%
+    #           red: 0%
+    #           blue: 100%
+    #           green: 0%
+    #           duration: 150ms
+    #         - state: False
+    #           duration: 100ms
+      
+    #   - lambda:
+    #       name: Throb
+    #       update_interval: 1s
+    #       lambda: |-
+    #         static int state = 0;
+    #         auto call = id(diningroomlightrgb).turn_on();
+    #         // Transtion of 1000ms = 1s
+    #         call.set_transition_length(1000);
+    #         if (state == 0) {
+    #           call.set_brightness(1.0);
+    #         } else {
+    #           call.set_brightness(0.01);
+    #         }
+    #         call.perform();
+    #         state += 1;
+    #         if (state == 2)
+    #           state = 0;

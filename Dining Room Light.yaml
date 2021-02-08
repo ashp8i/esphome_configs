@@ -45,7 +45,6 @@ ota:
 web_server:
   port: 80
 
-
 output:
   - platform: esp8266_pwm
     id: output_red
@@ -308,7 +307,7 @@ binary_sensor:
               call.set_transition_length(2000); // in ms
               call.perform();
 
-  - platform: remote_receiver
+- platform: remote_receiver
     name: "Bright+ Button"
     nec:
       address: 0xFF00
@@ -320,10 +319,10 @@ binary_sensor:
             binary_sensor.is_on: brightbutton
           then:
             - light.dim_relative:
-                id: ${device_name}
+                id: diningroomlight
                 relative_brightness: 5%
-                transition_length: 0.5s
-
+                transition_length: 0.1s
+            - delay: 0.1s
 
   - platform: remote_receiver
     name: "Dim- Button"
@@ -337,9 +336,10 @@ binary_sensor:
             binary_sensor.is_on: dimbutton
           then:
             - light.dim_relative:
-                id: ${device_name}
+                id: diningroomlight
                 relative_brightness: -5%
-                transition_length: 0.5s
+                transition_length: 0.1s
+            - delay: 0.1s
 
 light:
   - platform: cwww
